@@ -538,10 +538,10 @@ const lampadas = []; let lamp;
       const t = j / (porFio - 1), x = -15.2 + t * 30.4, y = 6.6 - Math.sin(Math.PI * t) * 1.6;
       o.position.set(x, y - 0.12, z); o.updateMatrix(); lamp.setMatrixAt(k++, o.matrix); pts.push(new THREE.Vector3(x, y, z));
     }
-    cena.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x2a2018 })));
+    if (false) cena.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x2a2018 })));
     // sem postes: os varais saem da lona e do deck (pilar na frente da vista atrapalha a venda)
   }
-  cena.add(lamp);
+  // varais de luz sobre a pista removidos (Rafa, 17/11)
 }
 const feixes = [];
 {
@@ -718,7 +718,7 @@ function aplicaHora(h) {
 const horaSel = document.getElementById('horaSel');
 const horaDoSlider = () => 16 + horaSel.value / 60;
 horaSel.addEventListener('input', () => { animHora = null; aplicaHora(horaDoSlider()); });
-let animHora = { de: 16.4, para: horaDoSlider(), t0: performance.now(), ms: 26000 };
+let animHora = { de: 16.4, para: horaDoSlider(), t0: performance.now(), ms: 21000 };
 
 // ---------------------------------------------------------------------------
 // câmera: voos
@@ -749,10 +749,11 @@ const ROTEIRO = [
 const curvaPos = new THREE.CatmullRomCurve3(ROTEIRO.map(r => new THREE.Vector3(...r[1])), false, 'centripetal');
 const curvaAlvo = new THREE.CatmullRomCurve3(ROTEIRO.map(r => new THREE.Vector3(...r[2])), false, 'centripetal');
 let intro = null;
+const VEL_INTRO = 1.25;   // 25% mais rápido que o roteiro (Rafa, 17/11): ~26 s
 function comecaIntro() { intro = { t0: performance.now(), teto: false }; document.body.classList.add('intro'); }
 function passoIntro() {
   if (!intro) return false;
-  const s = (performance.now() - intro.t0) / 1000, n = ROTEIRO.length;
+  const s = (performance.now() - intro.t0) / 1000 * VEL_INTRO, n = ROTEIRO.length;
   let i = 0; while (i < n - 2 && s > ROTEIRO[i + 1][0]) i++;
   let u = THREE.MathUtils.clamp((s - ROTEIRO[i][0]) / (ROTEIRO[i + 1][0] - ROTEIRO[i][0]), 0, 1);
   if (i === n - 2) u = 1 - (1 - u) * (1 - u);               // pousa suave na vista final
