@@ -12,7 +12,10 @@ const Q2 = 'https://q2ingressos.com.br/events/sunset-experience-na-represa-com-z
 const ZAP = '554498579760';
 const linkZap = lugar => 'https://wa.me/' + ZAP + '?text=' + encodeURIComponent(
   'Olá! Vi o mapa do Sunset Experience (Zezé Di Camargo & Luciano · 05/12) e quero comprar' + (lugar ? ': ' + lugar + '.' : ' ingresso.'));
-for (const id of ['topoComprar', 'rodComprar', 'fComprar']) document.getElementById(id).href = linkZap('');
+// VIP Premium e Backstage = site (Q2); camarote, bistrô e lounge = WhatsApp (Rafa, 17/11)
+const vaiProSite = st => st === 'vip' || st === 'back';
+const linkCompra = (st, lugar) => vaiProSite(st) ? Q2 : linkZap(lugar);
+for (const id of ['topoComprar', 'rodComprar', 'fComprar']) document.getElementById(id).href = Q2;
 // disponibilidade: planilha da A6 publicada como CSV (colunas: lugar, status). Vazio = sem indicação.
 const VENDAS = { csv: '', aCada: 60000 };
 const vendidos = new Set();
@@ -35,8 +38,8 @@ const SETORES = {
             txt: 'Mesa alta para 6 pessoas no deck do meio, de frente para o palco.', vista: 'bis' },
   bis4:   { nome: 'Bistrô 4º andar', curto: 'Bistrô · 4º andar', cor: '#d24fea', preco: 'Consulte', obs: 'mesa para 6 pessoas · valor no WhatsApp', sub: 'Bistrôs 89 a 110',
             txt: 'O deck mais alto dos bistrôs: a pista e o palco inteiros à vista.', vista: 'bis' },
-  lounge: { nome: 'Lounge patrocinador', curto: 'Lounge', cor: '#2f6b3d', preco: 'Exclusivo', obs: 'para patrocinadores', sub: 'Lounges 1 a 6, na beira da passarela',
-            txt: 'Espaços dos patrocinadores, colados na passarela. Não estão à venda.', vista: 'lounge', semVenda: true },
+  lounge: { nome: 'Lounge', curto: 'Lounge', cor: '#2f6b3d', preco: 'Consulte', obs: 'valor no WhatsApp', sub: 'Lounges 1 a 6, colados na passarela',
+            txt: 'Lounge no chão, colado na passarela, bem em frente ao palco.', vista: 'lounge' },
   palco:  { nome: 'Palco', curto: 'Palco', cor: '#2a2a30', preco: 'Zezé & Luciano', obs: 'a partir das 16h', sub: 'Com passarela até a pista',
             txt: 'Zezé Di Camargo & Luciano no palco, com o pôr do sol atrás da represa.', vista: 'palco', semVenda: true },
 };
@@ -651,7 +654,7 @@ const pilulas = [
   { t: 'PALCO', p: [0, TOPO + 1.6, -28], cls: 'branca', st: 'palco', cor: '#fff', txtCor: '#2a2a30' },
   { t: 'BACKSTAGE', p: [-10.5, PISO_PALCO + 2.6, -27], cls: 'branca', st: 'back', perto: 70 },
   { t: 'BACKSTAGE', p: [10.5, PISO_PALCO + 2.6, -27], cls: 'branca', st: 'back' },
-  { t: 'LOUNGES PATROCINADORES', p: [0, 2.6, -15.6], st: 'lounge', bg: '#ffffff', txtCor: '#2f6b3d', perto: 48, peq: true },
+  { t: 'LOUNGES', p: [0, 2.6, -15.6], st: 'lounge', bg: '#ffffff', txtCor: '#2f6b3d', perto: 48, peq: true },
   { t: 'VIP PREMIUM', p: [0, 2.4, 9], st: 'vip', bg: '#2e8b14' },
   { t: 'CAMAROTES', p: [-23, 13.5, 20], st: 'cam1', bg: '#4b4bf0' },
   { t: 'BISTRÔS', p: [22.5, 6.4, 20], st: 'bis2', bg: '#d24fea' },
@@ -776,7 +779,7 @@ const ficha = document.getElementById('ficha');
 function pinta() {
   for (const l of lugares) {
     const sel = l.id === selId, hov = l.id === hoverId, doSetor = setorAtivo && l.setor === setorAtivo;
-    const livre = comVendas && !l.vendido && l.tipo !== 'lounge', vend = comVendas && l.vendido;
+    const livre = comVendas && !l.vendido, vend = comVendas && l.vendido;
     if (l.inst != null) tampos.setColorAt(l.inst, sel ? COR_SOL : hov || doSetor ? COR_HOVER : livre ? COR_LIVRE : vend ? COR_VENDIDO : COR_TAMPO);
     else if (l.mesh) { l.mesh.material.emissive.set(sel ? 0xffc21a : hov ? 0x6a4a10 : doSetor ? 0x3a2a08 : livre ? 0x5a3a00 : 0); l.mesh.material.emissiveIntensity = sel ? 0.9 : 1; }
     l.tag.classList.toggle('sel', sel);
@@ -798,7 +801,7 @@ function abreFicha(st, titulo, sub, extra = '') {
   document.getElementById('fTxt').textContent = S.txt + extra;
   const b = document.getElementById('fComprar');
   b.style.display = S.semVenda ? 'none' : '';
-  b.href = linkZap(titulo); b.textContent = 'Compre agora'; b.onclick = null;
+  b.href = linkCompra(st, titulo); b.textContent = vaiProSite(st) ? 'Compre agora no site' : 'Compre agora'; b.onclick = null;
   document.getElementById('fMiniNome').textContent = titulo;
   document.getElementById('fMiniPreco').textContent = S.preco;
   ficha.classList.remove('mini');
@@ -873,7 +876,7 @@ function entraNoOlho() {
   document.body.classList.remove('olhoUI');
   document.body.classList.add('olhoSelo1'); clearTimeout(entraNoOlho.t); entraNoOlho.t = setTimeout(() => document.body.classList.remove('olhoSelo1'), 2600);
   const comprar = document.getElementById('olhoComprar');
-  comprar.href = linkZap(nome); comprar.style.display = SETORES[st].semVenda ? 'none' : '';
+  comprar.href = linkCompra(st, nome); comprar.style.display = SETORES[st].semVenda ? 'none' : '';
   const olho = new THREE.Vector3(...o.pos), dir = new THREE.Vector3(...o.alvo).sub(olho).normalize();
   const alvo = olho.clone().addScaledVector(dir, 0.8);
   Object.assign(ctl, { enableZoom: false, enablePan: false, minDistance: 0.79 });
@@ -1058,14 +1061,14 @@ setTimeout(esconderDica, 9000);
 const idDoTexto = t => {
   const s = String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(), n = parseInt((s.match(/\d+/) || [])[0], 10);
   if (!n) return null;
-  return /^c|cam/.test(s) ? 'c' + n : /^b|bis/.test(s) ? 'b' + n : null;
+  return /^c|cam/.test(s) ? 'c' + n : /^b|bis/.test(s) ? 'b' + n : /^l|lou/.test(s) ? 'l' + n : null;
 };
 async function carregaVendas() {
   const demo = new URLSearchParams(location.search).has('demo');
   const novos = new Set();
   try {
     if (demo) {
-      for (const l of lugares) if (l.tipo !== 'lounge' && ((l.num * 37 + (l.tipo === 'cam' ? 11 : 3)) % 10) < 4) novos.add(l.id);
+      for (const l of lugares) if (((l.num * 37 + (l.tipo === 'cam' ? 11 : 3)) % 10) < 4) novos.add(l.id);
     } else if (VENDAS.csv) {
       const txt = await (await fetch(VENDAS.csv + (VENDAS.csv.includes('?') ? '&' : '?') + 't=' + Date.now())).text();
       for (const linha of txt.split(/\r?\n/).slice(1)) {
