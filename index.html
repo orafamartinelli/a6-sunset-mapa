@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sunset Experience na Represa | Mapa 3D</title>
+<meta name="description" content="Explore em 3D o Sunset Experience na Represa Sendeski com Zezé Di Camargo & Luciano: camarotes, bistrôs, backstage e VIP Premium. Sábado, 05 de dezembro, a partir das 16h.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Sunset Experience na Represa · Escolha seu lugar em 3D">
+<meta property="og:description" content="Zezé Di Camargo & Luciano no pôr do sol da Represa Sendeski. Sáb 05/12, a partir das 16h.">
+<meta property="og:url" content="https://orafamartinelli.com.br/sunset/">
+<meta property="og:image" content="https://orafamartinelli.com.br/sunset/capa.jpg">
+<link rel="canonical" href="https://orafamartinelli.com.br/sunset/">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#2a1020">
+<link rel="icon" href="icone.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Bagel+Fat+One&family=Unbounded:wght@500;700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="rastreio-lp.js?v=20261116a" data-site="a6-sunset-mapa" data-vercel-base="/sunset" defer></script>
+<style>
+/* Conceito: o mapa é o palco. Fundo de crepúsculo, pílulas e cores dos setores iguais ao flyer. */
+:root{
+  --noite:#1b0b1c; --noite2:#2a1020; --vidro:rgba(36,14,30,.72); --linha:rgba(255,214,170,.18);
+  --creme:#fff1d6; --sub:#f3c9a6; --coral:#ff5a4e; --laranja:#ff8a2a; --sol:#ffc21a;
+  --vip:#2e8b14; --back:#1f6fe5; --cam:#4b4bf0; --bis:#d24fea; --lounge:#2f6b3d;
+  --f-logo:'Italiana', 'Didot', serif; --f-gordo:'Bagel Fat One', 'Arial Black', sans-serif;
+  --f-tit:'Unbounded', 'Montserrat', sans-serif; --f-txt:'Montserrat', system-ui, sans-serif;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--noite);color:var(--creme);font-family:var(--f-txt)}
+body{padding-left:max(0px, env(safe-area-inset-left,0px));padding-right:max(0px, env(safe-area-inset-right,0px))}
+a{color:inherit}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--sol);outline-offset:2px}
+
+/* topo */
+.topo{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px max(16px, env(safe-area-inset-right,0px)) 14px max(16px, env(safe-area-inset-left,0px));
+  background:linear-gradient(180deg, rgba(27,11,28,.95), rgba(27,11,28,0))}
+.marca{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0}
+.marca .sunset{font-family:var(--f-logo);font-size:clamp(30px,4.4vw,46px);letter-spacing:.06em;line-height:1;color:var(--creme)}
+.marca .exp{font:500 10px var(--f-tit);letter-spacing:.32em;background:var(--creme);color:var(--coral);padding:3px 6px 3px 8px;border-radius:2px;transform:translateY(-6px)}
+.marca .info{font:700 11px var(--f-tit);letter-spacing:.14em;color:var(--sub);text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:11px 18px;font:800 13px var(--f-tit);letter-spacing:.04em;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.sol{background:linear-gradient(135deg,var(--sol),var(--laranja));color:#3a0d12;box-shadow:0 6px 24px rgba(255,138,42,.35)}
+.btn.vidro{background:var(--vidro);color:var(--creme);border:1px solid var(--linha);backdrop-filter:blur(8px)}
+
+/* palco 3D */
+.mapa{position:relative;height:clamp(560px,86vh,940px);margin-top:-72px;overflow:hidden;background:#24101f}
+#cena{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#cena:active{cursor:grabbing}
+.camada{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.carregando{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(80% 70% at 50% 60%,#ff8a2a 0%,#c8344a 45%,#2a1020 100%);transition:opacity .9s;z-index:4}
+.carregando b{font-family:var(--f-logo);font-size:clamp(46px,9vw,110px);letter-spacing:.08em;color:var(--creme)}
+.carregando.fora{opacity:0;pointer-events:none}
+
+/* pílulas de setor (como no flyer) */
+.pilula{position:absolute;transform:translate(-50%,-100%);font:800 clamp(11px,1.1vw,15px) var(--f-tit);letter-spacing:.06em;color:#fff;padding:9px 16px;border-radius:999px;white-space:nowrap;pointer-events:auto;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28);transition:transform .2s, opacity .3s}
+.pilula::after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);border:8px solid transparent;border-top-color:inherit;border-bottom:0}
+.pilula.branca{background:#fff;color:#1f6fe5}
+.pilula.local{background:none;box-shadow:none;color:var(--creme);font:400 clamp(16px,1.8vw,24px) var(--f-logo);letter-spacing:.3em;text-shadow:0 2px 12px rgba(0,0,0,.45);pointer-events:none}
+.pilula.local::after{display:none}
+.pilula:hover{transform:translate(-50%,-100%) scale(1.06)}
+.pilula.apagada{opacity:.25}
+.num{position:absolute;transform:translate(-50%,-100%);font:700 10px var(--f-txt);color:#fff;background:rgba(20,8,18,.78);border:1px solid rgba(255,255,255,.18);padding:2px 6px;border-radius:6px;white-space:nowrap;pointer-events:auto;cursor:pointer;transition:opacity .25s}
+.num.sel{background:var(--sol);color:#3a0d12;border-color:var(--sol);transform:translate(-50%,-100%) scale(1.4);z-index:3}
+.num.longe{opacity:0;pointer-events:none}
+
+/* painel lateral */
+.painel{position:absolute;top:84px;left:max(16px, env(safe-area-inset-left,0px));width:330px;max-height:calc(100% - 100px);overflow:auto;background:var(--vidro);backdrop-filter:blur(14px);border:1px solid var(--linha);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:16px;z-index:3;scrollbar-width:thin}
+.painel h1{font:400 clamp(26px,2.4vw,32px)/1.02 var(--f-gordo);margin:0;letter-spacing:.01em;text-wrap:balance}
+.painel h1 em{font-style:normal;color:var(--sol)}
+.rot{font:700 10px var(--f-tit);letter-spacing:.2em;text-transform:uppercase;color:var(--sub);margin-bottom:8px}
+.busca{position:relative}
+.busca form{display:flex;background:rgba(0,0,0,.28);border:1.5px solid rgba(255,194,26,.45);border-radius:14px;overflow:hidden}
+.busca input{flex:1;min-width:0;background:none;border:0;color:var(--creme);font:600 14px var(--f-txt);padding:12px 14px;outline:none}
+.busca input::placeholder{color:#c9a58e}
+.busca form button{border:0;background:var(--sol);color:#3a0d12;width:46px;font-size:18px;font-weight:800;cursor:pointer}
+.sugestoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sugestoes button{border:1px solid var(--linha);background:rgba(255,255,255,.06);color:var(--creme);border-radius:999px;padding:6px 10px;font:600 12px var(--f-txt);cursor:pointer}
+.setores{display:flex;flex-direction:column;gap:7px}
+.setor{display:grid;grid-template-columns:12px 1fr auto;align-items:center;gap:10px;width:100%;text-align:left;background:rgba(255,255,255,.05);border:1px solid var(--linha);border-radius:12px;padding:10px 12px;color:var(--creme);cursor:pointer;transition:background .2s,border-color .2s}
+.setor i{width:12px;height:12px;border-radius:4px;background:var(--c)}
+.setor b{display:block;font:700 13px var(--f-tit);letter-spacing:.02em}
+.setor small{display:block;color:var(--sub);font-size:11.5px;margin-top:2px}
+.setor .p{font:800 13px var(--f-tit);color:var(--sol);text-align:right;font-variant-numeric:tabular-nums}
+.setor:hover,.setor[aria-pressed=true]{background:rgba(255,255,255,.12);border-color:var(--c)}
+
+/* controles do mapa */
+.ctrl{position:absolute;right:max(16px, env(safe-area-inset-right,0px));top:84px;display:flex;flex-direction:column;gap:10px;align-items:flex-end;z-index:3}
+.hora{background:var(--vidro);backdrop-filter:blur(12px);border:1px solid var(--linha);border-radius:16px;padding:12px 14px;width:240px}
+.hora .linha{display:flex;justify-content:space-between;align-items:baseline}
+.hora b{font:800 22px var(--f-tit);font-variant-numeric:tabular-nums}
+.hora small{color:var(--sub);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.hora input{width:100%;accent-color:var(--sol);margin:8px 0 2px}
+.hora .marcas{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);font-weight:700}
+.zoom{display:flex;flex-direction:column;background:var(--vidro);backdrop-filter:blur(12px);border:1px solid var(--linha);border-radius:14px;overflow:hidden}
+.zoom button{width:44px;height:42px;border:0;background:none;color:var(--creme);font-size:19px;cursor:pointer}
+.zoom button+button{border-top:1px solid var(--linha)}
+.dica{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);font:600 12px var(--f-txt);color:var(--creme);background:rgba(20,8,18,.55);padding:7px 14px;border-radius:999px;pointer-events:none;transition:opacity .6s;z-index:2;white-space:nowrap}
+
+/* ficha */
+.ficha{position:absolute;right:max(16px, env(safe-area-inset-right,0px));bottom:18px;width:min(340px,calc(100% - 32px));background:rgba(36,14,30,.92);backdrop-filter:blur(14px);border:1px solid var(--linha);border-radius:20px;padding:18px;z-index:4;transform:translateY(24px);opacity:0;pointer-events:none;transition:.3s}
+.ficha.on{transform:none;opacity:1;pointer-events:auto}
+.ficha .tag{display:inline-block;font:800 10px var(--f-tit);letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--c);padding:5px 9px;border-radius:999px}
+.ficha h2{font:400 34px/1 var(--f-gordo);margin:10px 0 4px}
+.ficha .sub{color:var(--sub);font-size:13px;font-weight:600}
+.ficha .preco{display:flex;align-items:baseline;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+.ficha .preco b{font:800 28px var(--f-tit);color:var(--sol);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ficha .vista{width:100%;margin-bottom:8px;background:rgba(255,194,26,.12);color:var(--sol);border:1px solid rgba(255,194,26,.45)}
+.ficha .vista[aria-pressed=true]{background:var(--sol);color:#3a0d12}
+.ficha .preco small{color:var(--sub);font-size:12px}
+.ficha p{font-size:12.5px;color:#e8c6b0;margin:6px 0 14px;line-height:1.45}
+.ficha .acoes{display:flex;gap:8px}
+.ficha .acoes .btn{flex:1}
+.fechar{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--sub);font-size:20px;cursor:pointer}
+.aviso{position:absolute;left:50%;top:92px;transform:translateX(-50%);background:var(--sol);color:#3a0d12;font:800 12px var(--f-tit);padding:9px 14px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:6}
+.aviso.on{opacity:1}
+
+/* seções abaixo */
+.faixa{padding:clamp(48px,7vw,96px) max(16px, env(safe-area-inset-right,0px)) clamp(48px,7vw,96px) max(16px, env(safe-area-inset-left,0px))}
+.miolo{max-width:1180px;margin:0 auto}
+.ingressos{background:linear-gradient(180deg,#24101f 0%,#3b1424 100%)}
+.titulo{font:400 clamp(34px,5vw,64px)/.98 var(--f-gordo);margin:0 0 10px;text-wrap:balance}
+.titulo em{font-style:normal;color:var(--sol)}
+.lead{color:var(--sub);font-size:16px;max-width:60ch;margin:0 0 32px;line-height:1.5}
+.cartoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.cartao{position:relative;border-radius:18px;padding:18px;background:rgba(255,255,255,.05);border:1px solid var(--linha);display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left;color:var(--creme);overflow:hidden}
+.cartao::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--c)}
+.cartao b{font:700 14px var(--f-tit)}
+.cartao small{color:var(--sub);font-size:12px}
+.cartao .v{font:800 26px var(--f-tit);color:var(--sol);margin-top:6px;font-variant-numeric:tabular-nums}
+.cartao .v span{font:600 12px var(--f-txt);color:var(--sub)}
+.cartao:hover{background:rgba(255,255,255,.1)}
+.obs{font-size:12px;color:#c79f88;margin-top:14px}
+
+.lugar{background:radial-gradient(90% 80% at 80% 20%,#ff8a2a33,transparent 60%),linear-gradient(180deg,#3b1424,#1b0b1c)}
+.lugar .grade{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:clamp(24px,5vw,72px);align-items:center}
+.video{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:9/16;max-width:100%;background:#000 url(poster.jpg) center/cover;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.video video{width:100%;height:100%;object-fit:cover;display:block}
+.video button{position:absolute;right:12px;bottom:12px}
+.fatos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:28px}
+.fato{border-top:1px solid var(--linha);padding-top:12px}
+.fato b{display:block;font:400 clamp(26px,3.2vw,40px)/1 var(--f-gordo);color:var(--sol)}
+.fato span{color:var(--sub);font-size:13px;font-weight:600}
+
+.atracao{background:#ff6a3d;padding:0}
+.atracao img{display:block;width:100%;max-width:1180px;margin:0 auto;height:auto}
+.rodape{background:var(--noite);padding:32px max(16px, env(safe-area-inset-right,0px)) 40px max(16px, env(safe-area-inset-left,0px));text-align:center;color:var(--sub);font-size:12px;display:flex;flex-direction:column;gap:14px;align-items:center}
+.rodape b{color:var(--creme)}
+
+@media (max-width:900px){
+  .mapa{height:auto;min-height:0;margin-top:-64px;display:flex;flex-direction:column}
+  .mapa .tela{position:relative;height:74vh;min-height:460px}
+  .painel{position:relative;top:auto;left:auto;width:auto;max-height:none;margin:12px 16px 0;border-radius:18px}
+  .ctrl{top:74px}
+  .hora{width:190px;padding:10px 12px}
+  .ficha{bottom:12px;right:16px}
+  .lugar .grade{grid-template-columns:1fr}
+  .video{max-width:360px;margin:0 auto;width:100%}
+  .marca .info{display:none}
+}
+@media (min-width:901px){ .mapa .tela{position:absolute;inset:0} }
+@media (max-width:600px){
+  .ficha{padding:14px;border-radius:16px}
+  .ficha p{display:none}
+  .ficha h2{font-size:26px;margin:8px 0 2px}
+  .ficha .preco{margin:8px 0 10px}
+  .ficha .preco b{font-size:22px}
+  .ficha .btn{padding:10px 12px;font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <span class="sunset">SUNSET</span><span class="exp">EXPERIENCE</span>
+    <span class="info">05 dez · Represa Sendeski · Maringá</span>
+  </div>
+  <a class="btn sol" id="topoComprar" data-rastreio-cta="ingressos-topo" href="#" target="_blank" rel="noopener">Ingressos</a>
+</header>
+
+<section class="mapa" aria-label="Mapa 3D do evento">
+  <div class="tela">
+    <canvas id="cena" aria-hidden="true"></canvas>
+    <div class="camada" id="camada"></div>
+    <div class="carregando" id="carregando"><b>SUNSET</b></div>
+
+    <div class="ctrl">
+      <div class="hora">
+        <div class="linha"><small id="horaTxt">Pôr do sol</small><b id="horaNum">18:40</b></div>
+        <input type="range" id="horaSel" min="0" max="360" value="160" aria-label="Horário do evento">
+        <div class="marcas"><span>16h</span><span>19h</span><span>22h</span></div>
+      </div>
+      <div class="zoom">
+        <button id="zMais" aria-label="Aproximar">+</button>
+        <button id="zMenos" aria-label="Afastar">−</button>
+        <button id="zReset" aria-label="Voltar à visão geral">⟲</button>
+        <button id="compartilhar" aria-label="Copiar link deste lugar">↗</button>
+      </div>
+    </div>
+
+    <div class="ficha" id="ficha" role="dialog" aria-label="Detalhes do lugar">
+      <button class="fechar" id="fFechar" aria-label="Fechar">×</button>
+      <span class="tag" id="fTag">Camarote</span>
+      <h2 id="fNome">Camarote 12</h2>
+      <div class="sub" id="fSub">1º andar</div>
+      <div class="preco"><b id="fPreco">R$ 8.400</b><small id="fPrecoObs">+ taxas · lote 1</small></div>
+      <p id="fTxt"></p>
+      <button class="btn vista" id="fVista" aria-pressed="false">👁 Ver a vista daqui</button>
+      <div class="acoes">
+        <a class="btn sol" id="fComprar" data-rastreio-cta="comprar-ficha" href="#" target="_blank" rel="noopener">Comprar na Q2</a>
+        <button class="btn vidro" id="fLink">Copiar link</button>
+      </div>
+    </div>
+    <div class="dica" id="dica">Arraste para girar · role para aproximar · toque num lugar</div>
+    <div class="aviso" id="aviso">Link copiado</div>
+  </div>
+
+  <aside class="painel" id="painel">
+    <h1>Escolha seu lugar no <em>pôr do sol</em>.</h1>
+    <div class="busca">
+      <div class="rot">Encontrar</div>
+      <form id="busca">
+        <input id="q" autocomplete="off" placeholder="Camarote 12, bistrô 45, lounge 3…" aria-label="Buscar camarote, bistrô ou lounge">
+        <button aria-label="Buscar">→</button>
+      </form>
+      <div class="sugestoes" id="sugestoes"></div>
+    </div>
+    <div>
+      <div class="rot">Setores</div>
+      <div class="setores" id="setores"></div>
+    </div>
+  </aside>
+</section>
+
+<section class="faixa ingressos" id="ingressos">
+  <div class="miolo">
+    <h2 class="titulo">Do gramado ao <em>3º andar</em>.</h2>
+    <p class="lead">Sete jeitos de viver o mesmo pôr do sol. Toque num setor para ver onde ele fica no mapa.</p>
+    <div class="cartoes" id="cartoes"></div>
+    <div class="obs">Valores do lote 1 na Q2 Ingressos, sem as taxas. Preço e disponibilidade podem mudar: o que vale é o site da Q2.</div>
+  </div>
+</section>
+
+<section class="faixa lugar">
+  <div class="miolo grade">
+    <div class="video">
+      <video id="video" src="lugar.mp4" poster="poster.jpg" muted loop playsinline preload="metadata"></video>
+      <button class="btn vidro" id="som" aria-label="Ligar o som do vídeo">🔈 Som</button>
+    </div>
+    <div>
+      <h2 class="titulo">Represa <em>Sendeski</em>.</h2>
+      <p class="lead">No Recanto das Águias, na saída de Maringá sentido Iguaraçu. Pela primeira vez esse cenário recebe um sunset sertanejo.</p>
+      <div class="fatos">
+        <div class="fato"><b>80 mil m²</b><span>de represa</span></div>
+        <div class="fato"><b>16h</b><span>abertura dos portões</span></div>
+        <div class="fato"><b>05.12</b><span>sábado</span></div>
+        <div class="fato"><b>Pista própria</b><span>de pouso e decolagem</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="atracao"><img src="atracao.jpg" alt="Zezé Di Camargo & Luciano, a partir das 16h" width="1080" height="400" loading="lazy"></section>
+
+<footer class="rodape">
+  <a class="btn sol" id="rodComprar" data-rastreio-cta="ingressos-rodape" href="#" target="_blank" rel="noopener">Garantir meu ingresso na Q2</a>
+  <div><b>Sunset Experience na Represa</b> · First Edition · realização A6 Produções e LG</div>
+  <div>O mapa 3D é uma representação ilustrativa da planta oficial do evento.</div>
+</footer>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
