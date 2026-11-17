@@ -77,6 +77,8 @@ button{font-family:inherit}
 .legVendas{display:none;gap:12px;align-items:center;background:var(--vidro);backdrop-filter:blur(12px);border:1px solid var(--linha);border-radius:999px;padding:7px 12px;font:700 11px var(--f-txt);color:var(--creme)}
 .legVendas i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 body.comVendas .legVendas{display:inline-flex}
+.faixaDemo{display:none;position:fixed;left:0;right:0;top:0;z-index:50;background:#ff5a4e;color:#fff;text-align:center;font:800 12px var(--f-tit);letter-spacing:.08em;padding:7px 12px;text-transform:uppercase}
+body.demoVendas .faixaDemo{display:block}
 
 /* painel lateral */
 .painel{position:absolute;top:84px;left:max(16px, env(safe-area-inset-left,0px));width:330px;max-height:calc(100% - 100px);overflow:auto;background:var(--vidro);backdrop-filter:blur(14px);border:1px solid var(--linha);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:16px;z-index:3;scrollbar-width:thin}
@@ -241,6 +243,7 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
 </style>
 </head>
 <body>
+<div class="faixaDemo">Demonstração · livres e vendidos FICTÍCIOS · não é a disponibilidade real</div>
 <header class="topo">
   <div class="marca">
     <span class="sunset">SUNSET</span><span class="exp">EXPERIENCE</span>
@@ -361,6 +364,6 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
 } }
 </script>
-<script type="module" src="app.js?v=14"></script>
+<script type="module" src="app.js?v=15"></script>
 </body>
 </html>

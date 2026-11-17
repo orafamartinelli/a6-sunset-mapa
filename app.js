@@ -1081,6 +1081,7 @@ async function carregaVendas() {
   comVendas = true; vendidos.clear(); novos.forEach(v => vendidos.add(v));
   for (const l of lugares) l.vendido = vendidos.has(l.id);
   document.body.classList.add('comVendas');
+  if (demo) document.body.classList.add('demoVendas');   // faixa: disponibilidade FICTÍCIA
   pinta();
 }
 carregaVendas();
