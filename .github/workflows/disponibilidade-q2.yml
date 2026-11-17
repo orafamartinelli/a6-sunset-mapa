@@ -1,0 +1,31 @@
+# Robô diário: lê na Q2 (seats.io) quem está livre/vendido e atualiza disponibilidade.json (OK da A6, 17/11/2026).
+name: disponibilidade-q2
+on:
+  schedule:
+    - cron: '0 11 * * *'   # 08h00 em Brasília
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: disponibilidade-q2
+jobs:
+  atualiza:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: dependências do robô
+        working-directory: scripts/robo
+        run: npm ci
+      - name: lê a Q2
+        working-directory: scripts/robo
+        timeout-minutes: 8
+        run: node disponibilidade-q2.mjs
+      - name: grava se mudou
+        run: |
+          git config user.name "robo-disponibilidade"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add disponibilidade.json
+          if git diff --cached --quiet; then echo "nada mudou"; else git commit -m "disponibilidade Q2 $(date -u +%F)" && git push; fi

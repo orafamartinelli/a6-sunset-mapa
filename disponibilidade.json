@@ -1,0 +1,614 @@
+{
+ "fonte": "Q2 Ingressos (seats.io)",
+ "atualizado": "2026-11-17T22:31:48.122Z",
+ "lugares": {
+  "c19": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c18": {
+   "s": "livre",
+   "p": 12
+  },
+  "c15": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c14": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c17": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c16": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c26": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c27": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c25": {
+   "s": "reservado",
+   "p": 12
+  },
+  "b100": {
+   "s": "livre",
+   "p": 6
+  },
+  "c28": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c29": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c30": {
+   "s": "vendido",
+   "p": 12
+  },
+  "b89": {
+   "s": "reservado",
+   "p": 6
+  },
+  "c33": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c34": {
+   "s": "livre",
+   "p": 12
+  },
+  "c31": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c32": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c22": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c21": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c24": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c23": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c10": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c11": {
+   "s": "livre",
+   "p": 12
+  },
+  "c12": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c20": {
+   "s": "vendido",
+   "p": 12
+  },
+  "b41": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b40": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b43": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b42": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b44": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b74": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b75": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b76": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b77": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b78": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b79": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b70": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b71": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b72": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b73": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b90": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b91": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b92": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b93": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b94": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b95": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b96": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b97": {
+   "s": "livre",
+   "p": 6
+  },
+  "b85": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b98": {
+   "s": "livre",
+   "p": 6
+  },
+  "b86": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b99": {
+   "s": "livre",
+   "p": 6
+  },
+  "b87": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b88": {
+   "s": "reservado",
+   "p": 6
+  },
+  "l3": {
+   "s": "livre",
+   "p": 15
+  },
+  "l4": {
+   "s": "livre",
+   "p": 15
+  },
+  "b80": {
+   "s": "reservado",
+   "p": 6
+  },
+  "l5": {
+   "s": "livre",
+   "p": 15
+  },
+  "b81": {
+   "s": "reservado",
+   "p": 6
+  },
+  "l6": {
+   "s": "livre",
+   "p": 15
+  },
+  "b82": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b83": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b84": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b14": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b13": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b16": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b15": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b10": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b12": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b11": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b52": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b53": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b54": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b55": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b56": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b18": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b57": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b17": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b58": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b59": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b19": {
+   "s": "vendido",
+   "p": 6
+  },
+  "l1": {
+   "s": "livre",
+   "p": 20
+  },
+  "l2": {
+   "s": "livre",
+   "p": 20
+  },
+  "b50": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b51": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b63": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b1": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b64": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b65": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b66": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b67": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b68": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b69": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b9": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b8": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b7": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b6": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b5": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b60": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b4": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b61": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b3": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b62": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b2": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b30": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b36": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b35": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b38": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b37": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b32": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b31": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b34": {
+   "s": "reservado",
+   "p": 6
+  },
+  "b33": {
+   "s": "vendido",
+   "p": 6
+  },
+  "c7": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c6": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c5": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c4": {
+   "s": "reservado",
+   "p": 12
+  },
+  "b39": {
+   "s": "vendido",
+   "p": 6
+  },
+  "c9": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c8": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c3": {
+   "s": "vendido",
+   "p": 12
+  },
+  "c2": {
+   "s": "reservado",
+   "p": 12
+  },
+  "c1": {
+   "s": "vendido",
+   "p": 12
+  },
+  "b49": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b25": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b24": {
+   "s": "vendido",
+   "p": 6
+  },
+  "c35": {
+   "s": "livre",
+   "p": 12
+  },
+  "b27": {
+   "s": "vendido",
+   "p": 6
+  },
+  "c36": {
+   "s": "livre",
+   "p": 12
+  },
+  "b26": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b21": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b20": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b23": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b110": {
+   "s": "livre",
+   "p": 6
+  },
+  "b22": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b102": {
+   "s": "livre",
+   "p": 6
+  },
+  "b101": {
+   "s": "livre",
+   "p": 6
+  },
+  "b104": {
+   "s": "livre",
+   "p": 6
+  },
+  "b103": {
+   "s": "livre",
+   "p": 6
+  },
+  "b106": {
+   "s": "livre",
+   "p": 6
+  },
+  "b45": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b29": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b105": {
+   "s": "livre",
+   "p": 6
+  },
+  "b46": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b28": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b108": {
+   "s": "livre",
+   "p": 6
+  },
+  "b47": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b107": {
+   "s": "livre",
+   "p": 6
+  },
+  "b48": {
+   "s": "vendido",
+   "p": 6
+  },
+  "b109": {
+   "s": "livre",
+   "p": 6
+  },
+  "c13": {
+   "s": "reservado",
+   "p": 12
+  }
+ }
+}

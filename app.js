@@ -17,7 +17,8 @@ const vaiProSite = st => st === 'vip' || st === 'back';
 const linkCompra = (st, lugar) => vaiProSite(st) ? Q2 : linkZap(lugar);
 for (const id of ['topoComprar', 'rodComprar', 'fComprar']) document.getElementById(id).href = Q2;
 // disponibilidade: planilha da A6 publicada como CSV (colunas: lugar, status). Vazio = sem indicação.
-const VENDAS = { csv: '', aCada: 60000 };
+const VENDAS = { arquivo: 'disponibilidade.json' };   // gerado 1×/dia pelo robô (scripts/robo) lendo a Q2/seats.io
+let atualizadoEm = null;
 const vendidos = new Set();
 let comVendas = false;
 
@@ -27,16 +28,16 @@ const SETORES = {
   back:   { nome: 'Backstage elevado', curto: 'Backstage', cor: '#1f6fe5', preco: 'R$ 500', obs: '+ taxas', sub: 'Plataformas dos dois lados do palco',
             txt: 'Plataformas elevadas coladas ao palco, uma de cada lado. A vista mais perto da dupla.', vista: 'back' },
   cam1:   { nome: 'Camarote 1º andar', curto: 'Camarote · 1º andar', cor: '#4b4bf0', preco: 'R$ 8.400', obs: 'por camarote · lote 1 · + taxas', sub: 'Camarotes 1 a 12',
-            txt: 'A fileira mais próxima da pista. Pergunte no WhatsApp quantas pessoas cada camarote leva.', vista: 'cam', andar: 1 },
+            txt: 'A fileira mais próxima da pista.', vista: 'cam', andar: 1 },
   cam2:   { nome: 'Camarote 2º andar', curto: 'Camarote · 2º andar', cor: '#4b4bf0', preco: 'R$ 7.800', obs: 'por camarote · lote 1 · + taxas', sub: 'Camarotes 13 a 24',
             txt: 'Um andar acima, com a pista inteira e o palco no campo de visão.', vista: 'cam', andar: 2 },
   cam3:   { nome: 'Camarote 3º andar', curto: 'Camarote · 3º andar', cor: '#4b4bf0', preco: 'R$ 7.200', obs: 'por camarote · lote 1 · + taxas', sub: 'Camarotes 25 a 36',
             txt: 'O ponto mais alto do evento: dá para ver a represa por cima da pista.', vista: 'cam', andar: 3 },
-  bis2:   { nome: 'Bistrô 2º andar', curto: 'Bistrô · 2º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 1 a 44',
+  bis2:   { nome: 'Bistrô 1º andar', curto: 'Bistrô · 1º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 1 a 44',
             txt: 'Mesa alta para 6 pessoas no deck elevado, ao lado da pista.', vista: 'bis' },
-  bis3:   { nome: 'Bistrô 3º andar', curto: 'Bistrô · 3º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 45 a 88',
+  bis3:   { nome: 'Bistrô 2º andar', curto: 'Bistrô · 2º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 45 a 88',
             txt: 'Mesa alta para 6 pessoas no deck do meio, de frente para o palco.', vista: 'bis' },
-  bis4:   { nome: 'Bistrô 4º andar', curto: 'Bistrô · 4º andar', cor: '#d24fea', preco: 'Consulte', obs: 'mesa para 6 pessoas · valor no WhatsApp', sub: 'Bistrôs 89 a 110',
+  bis4:   { nome: 'Bistrô 3º andar', curto: 'Bistrô · 3º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 89 a 110',
             txt: 'O deck mais alto dos bistrôs: a pista e o palco inteiros à vista.', vista: 'bis' },
   lounge: { nome: 'Lounge', curto: 'Lounge', cor: '#2f6b3d', preco: 'Consulte', obs: 'valor no WhatsApp', sub: 'Lounges 1 a 6, colados na passarela',
             txt: 'Lounge no chão, colado na passarela, bem em frente ao palco.', vista: 'lounge' },
@@ -818,9 +819,11 @@ function seleciona(id, voar) {
   if (l.tipo === 'cam') abreFicha(l.setor, 'Camarote ' + l.num, `${l.andar}º andar · lado esquerdo do palco`);
   else if (l.tipo === 'bis') abreFicha(l.setor, 'Bistrô ' + l.num, S.sub.replace('Bistrôs', 'Fileira dos bistrôs') + ' · lado direito');
   else abreFicha('lounge', 'Lounge ' + l.num, 'Na beira da passarela');
+  if (l.pessoas && l.tipo !== 'bis') document.getElementById('fSub').textContent += ' · até ' + l.pessoas + ' pessoas';
   if (comVendas && l.vendido) {
-    document.getElementById('fPreco').textContent = 'Vendido';
-    document.getElementById('fMiniPreco').textContent = 'Vendido';
+    const txtV = l.estado === 'reservado' ? 'Indisponível' : 'Vendido';
+    document.getElementById('fPreco').textContent = txtV;
+    document.getElementById('fMiniPreco').textContent = txtV;
     const b = document.getElementById('fComprar');
     b.textContent = 'Ver os livres deste setor'; b.href = '#';
     b.onclick = e => { e.preventDefault(); escolheSetor(l.setor); };
@@ -1070,22 +1073,27 @@ async function carregaVendas() {
   try {
     if (demo) {
       for (const l of lugares) if (((l.num * 37 + (l.tipo === 'cam' ? 11 : 3)) % 10) < 4) novos.add(l.id);
-    } else if (VENDAS.csv) {
-      const txt = await (await fetch(VENDAS.csv + (VENDAS.csv.includes('?') ? '&' : '?') + 't=' + Date.now())).text();
-      for (const linha of txt.split(/\r?\n/).slice(1)) {
-        const [lugar, status] = linha.split(',').map(x => (x || '').replace(/^"|"$/g, ''));
-        const id = idDoTexto(lugar); if (id && /vend/i.test(status)) novos.add(id);
+    } else {
+      const d = await (await fetch(VENDAS.arquivo + '?t=' + Math.floor(Date.now() / 600000))).json();
+      if (!d?.lugares) return;
+      for (const [id, o] of Object.entries(d.lugares)) {
+        const l = porId.get(id); if (!l) continue;
+        l.estado = o.s; l.pessoas = o.p || null;
+        if (o.s !== 'livre') novos.add(id);
       }
-    } else return;
-  } catch (e) { return; }                       // sem planilha: o mapa segue sem indicação
+      atualizadoEm = d.atualizado ? new Date(d.atualizado) : null;
+    }
+  } catch (e) { return; }                       // sem arquivo: o mapa segue sem indicação
   comVendas = true; vendidos.clear(); novos.forEach(v => vendidos.add(v));
   for (const l of lugares) l.vendido = vendidos.has(l.id);
   document.body.classList.add('comVendas');
-  if (demo) document.body.classList.add('demoVendas');   // faixa: disponibilidade FICTÍCIA
+  if (demo) document.body.classList.add('demoVendas');
+  const quando = document.getElementById('vendasQuando');
+  if (quando && atualizadoEm) quando.textContent = 'atualizado ' + atualizadoEm.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });   // faixa: disponibilidade FICTÍCIA
   pinta();
 }
-carregaVendas();
-if (VENDAS.csv) setInterval(carregaVendas, VENDAS.aCada);
+carregaVendas().then(() => { if (comVendas && selId && !noOlho) seleciona(selId, false); });   // refaz a ficha já com status e capacidade
+
 
 // ---------------------------------------------------------------------------
 // laço

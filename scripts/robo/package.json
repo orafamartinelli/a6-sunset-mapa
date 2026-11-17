@@ -1,0 +1,6 @@
+{
+  "name": "a6-sunset-robo-disponibilidade",
+  "private": true,
+  "type": "module",
+  "dependencies": { "playwright-core": "1.49.1" }
+}
