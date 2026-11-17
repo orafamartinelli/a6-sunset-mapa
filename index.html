@@ -129,17 +129,23 @@ button{font-family:inherit}
 body.olho .topo{opacity:0;pointer-events:none}
 body.olho .ficha, body.olho .camada, body.olho .zoom, body.olho .dica{opacity:0!important;pointer-events:none!important}
 .cinema{position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s}
-.cinema::before,.cinema::after{content:"";position:absolute;left:0;right:0;height:9%;background:#000;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.cinema::before,.cinema::after{content:"";position:absolute;left:0;right:0;height:5%;background:#000;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 .cinema::before{top:0;transform:translateY(-100%)}
 .cinema::after{bottom:0;transform:translateY(100%)}
-.cinema .vinheta{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+.cinema .vinheta{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 62%,rgba(0,0,0,.4) 100%)}
 body.olho .cinema{opacity:1}
 body.olho .cinema::before,body.olho .cinema::after{transform:none}
-.olhoBarra{position:absolute;left:50%;bottom:calc(9% + 14px);transform:translate(-50%,20px);z-index:6;display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.5s;width:max-content;max-width:calc(100% - 32px)}
-body.olho .olhoBarra{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.olhoBarra{position:absolute;left:50%;bottom:calc(5% + 14px);transform:translate(-50%,20px);z-index:6;display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.5s;width:max-content;max-width:calc(100% - 32px)}
+body.olho.olhoUI .olhoBarra{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+body.olho .ctrl{opacity:0;pointer-events:none;transition:opacity .4s}
+body.olho.olhoUI .ctrl{opacity:1;pointer-events:auto}
+body.olho.olhoUI .ctrl .zoom{display:none}
 .olhoSelo{font:800 12px var(--f-tit);letter-spacing:.22em;text-transform:uppercase;color:var(--creme);text-shadow:0 2px 10px rgba(0,0,0,.7);text-align:center}
 .olhoSelo b{display:block;font-size:clamp(22px,4vw,34px);letter-spacing:-.01em;text-transform:none;color:#fff;margin-top:4px}
 .olhoAcoes{display:flex;gap:8px}
+.olhoEntrada{position:absolute;left:50%;top:14%;transform:translateX(-50%);z-index:6;text-align:center;font:800 11px var(--f-tit);letter-spacing:.24em;text-transform:uppercase;color:var(--creme);text-shadow:0 2px 12px rgba(0,0,0,.8);opacity:0;pointer-events:none;transition:opacity .6s}
+.olhoEntrada b{display:block;font-size:clamp(20px,4vw,30px);letter-spacing:-.01em;text-transform:none;color:#fff;margin-top:4px}
+body.olho.olhoSelo1 .olhoEntrada{opacity:1}
 .olhoDica{font:600 12px var(--f-txt);color:#f6dcc6;text-shadow:0 1px 6px rgba(0,0,0,.8)}
 .fechar{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--sub);font-size:20px;cursor:pointer}
 .aviso{position:absolute;left:50%;top:92px;transform:translateX(-50%);background:var(--sol);color:#3a0d12;font:800 12px var(--f-tit);padding:9px 14px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:6}
@@ -188,7 +194,7 @@ body.olho .olhoBarra{opacity:1;transform:translate(-50%,0);pointer-events:auto}
   .video{max-width:360px;margin:0 auto;width:100%}
   .marca .info{display:none}
 }
-@media (min-width:901px){ .mapa .tela{position:absolute;inset:0} }
+@media (min-width:901px){ .mapa .tela{position:absolute;inset:0} .painel{transition:opacity .4s} body.olho .painel{opacity:0;pointer-events:none} }
 @media (max-width:600px){
   .ficha{left:12px;right:12px;bottom:10px;width:auto;padding:12px 14px;border-radius:16px;display:grid;grid-template-columns:1fr auto;column-gap:10px;align-items:center}
   .ficha.mini{left:50%;right:auto;transform:translateX(-50%);display:block}
@@ -257,13 +263,14 @@ body.olho .olhoBarra{opacity:1;transform:translate(-50%,0);pointer-events:auto}
       </div>
     </div>
     <div class="cinema" aria-hidden="true"><div class="vinheta"></div></div>
+    <div class="olhoEntrada">Sua vista<b id="olhoNome2">Camarote 14</b></div>
     <div class="olhoBarra" id="olhoBarra">
       <div class="olhoSelo">Sua vista<b id="olhoNome">Camarote 14</b></div>
       <div class="olhoAcoes">
         <button class="btn vidro" id="olhoVoltar">↩ Voltar ao mapa</button>
         <a class="btn sol" id="olhoComprar" data-rastreio-cta="comprar-vista" href="#" target="_blank" rel="noopener">Comprar</a>
       </div>
-      <div class="olhoDica">Arraste para olhar em volta · mude o horário no alto</div>
+      <div class="olhoDica">Arraste para olhar em volta</div>
     </div>
     <div class="dica" id="dica">Arraste para girar · role para aproximar · toque num lugar</div>
     <div class="aviso" id="aviso">Link copiado</div>
@@ -328,6 +335,6 @@ body.olho .olhoBarra{opacity:1;transform:translate(-50%,0);pointer-events:auto}
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
 } }
 </script>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=5"></script>
 </body>
 </html>

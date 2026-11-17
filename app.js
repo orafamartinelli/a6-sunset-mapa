@@ -292,7 +292,7 @@ for (let andar = 1; andar <= 3; andar++) {
   lona.geometry.computeVertexNormals();
   lona.rotation.x = -Math.PI / 2; lona.rotation.y = -0.12;
   lona.position.set(-21.2, 12.2, 0.5); lona.castShadow = true; cena.add(lona);
-  for (const z of [-20, -6, 8, 21]) for (const x of [-27, -15.2]) caixa(0.22, x < -20 ? 13.4 : 11.6, 0.22, 0, x, (x < -20 ? 13.4 : 11.6) / 2 + 0.3, z, { material: metal });
+  for (const z of [-20, -6, 8, 21]) for (const x of [-27]) caixa(0.22, x < -20 ? 13.4 : 11.6, 0.22, 0, x, (x < -20 ? 13.4 : 11.6) / 2 + 0.3, z, { material: metal });
 }
 
 // ---------------------------------------------------------------------------
@@ -363,7 +363,7 @@ const lampadas = []; let lamp;
       o.position.set(x, y - 0.12, z); o.updateMatrix(); lamp.setMatrixAt(k++, o.matrix); pts.push(new THREE.Vector3(x, y, z));
     }
     cena.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x2a2018 })));
-    for (const x of [-15.4, 15.4]) caixa(0.15, 7, 0.15, 0, x, 3.8, z, { material: metal });
+    // sem postes: os varais saem da lona e do deck (pilar na frente da vista atrapalha a venda)
   }
   cena.add(lamp);
 }
@@ -602,6 +602,9 @@ function entraNoOlho() {
   noOlho = true;
   document.body.classList.add('olho');
   document.getElementById('olhoNome').textContent = nome;
+  document.getElementById('olhoNome2').textContent = nome;
+  document.body.classList.remove('olhoUI');
+  document.body.classList.add('olhoSelo1'); clearTimeout(entraNoOlho.t); entraNoOlho.t = setTimeout(() => document.body.classList.remove('olhoSelo1'), 2600);
   const comprar = document.getElementById('olhoComprar');
   comprar.href = Q2; comprar.style.display = SETORES[st].semVenda ? 'none' : '';
   const olho = new THREE.Vector3(...o.pos), dir = new THREE.Vector3(...o.alvo).sub(olho).normalize();
@@ -614,7 +617,7 @@ function entraNoOlho() {
 function saiDoOlho() {
   if (!noOlho) return;
   noOlho = false;
-  document.body.classList.remove('olho');
+  document.body.classList.remove('olho', 'olhoUI', 'olhoSelo1');
   Object.assign(ctl, ORBITA_MAPA);
   ajusta();
 }
@@ -713,6 +716,15 @@ function acerta(e) {
   return null;
 }
 let baixo = null;
+function mostraControlesOlho() {
+  if (!noOlho) return;
+  document.body.classList.remove('olhoSelo1');
+  document.body.classList.add('olhoUI');
+  clearTimeout(mostraControlesOlho.t);
+  mostraControlesOlho.t = setTimeout(() => document.body.classList.remove('olhoUI'), 3000);
+}
+canvas.addEventListener('pointerup', () => mostraControlesOlho());
+document.getElementById('olhoBarra').addEventListener('pointerdown', () => mostraControlesOlho());
 canvas.addEventListener('pointerdown', e => {
   baixo = [e.clientX, e.clientY];
   if (voo?.aoFim) { cam.position.copy(voo.p1); ctl.target.copy(voo.a1); voo.aoFim(); }
