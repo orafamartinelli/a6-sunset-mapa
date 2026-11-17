@@ -125,6 +125,17 @@ button{font-family:inherit}
 .ficha.mini .miniTxt i{width:10px;height:10px;border-radius:50%;background:var(--c)}
 .ficha.mini .miniTxt b{color:var(--sol)}
 .ficha.mini .miniTxt span:last-child{color:var(--sub);font-size:16px}
+.coberto{display:inline-flex;align-items:center;gap:8px;background:var(--vidro);backdrop-filter:blur(12px);border:1px solid var(--linha);border-radius:999px;padding:9px 14px;color:var(--creme);font:800 12px var(--f-tit);letter-spacing:.04em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.coberto i{font-style:normal;color:var(--sol);font-size:16px;line-height:1}
+.coberto[aria-pressed=true]{background:var(--creme);color:#3a0d12;border-color:var(--creme)}
+.coberto[aria-pressed=true] i{color:var(--coral)}
+.cobAviso{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:4;text-align:center;color:#fff;opacity:0;transition:opacity .7s;pointer-events:none;white-space:nowrap}
+.cobAviso b{display:block;font:800 clamp(20px,3.4vw,34px) var(--f-tit);letter-spacing:-.01em;text-shadow:0 2px 20px rgba(0,0,0,.55)}
+.cobAviso small{display:block;margin-top:8px;font:700 11px var(--f-txt);letter-spacing:.16em;text-transform:uppercase;color:var(--creme);text-shadow:0 1px 8px rgba(0,0,0,.6)}
+body.cobFechada .cobAviso{opacity:1}
+body.olho .cobAviso{opacity:0}
+.camada{transition:opacity .5s}
+body.cobFechada .camada{opacity:0;pointer-events:none}
 .topo{transition:opacity .4s}
 body.olho .topo{opacity:0;pointer-events:none}
 body.olho .ficha, body.olho .camada, body.olho .zoom, body.olho .dica{opacity:0!important;pointer-events:none!important}
@@ -234,7 +245,9 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
     <div class="camada" id="camada"></div>
     <div class="carregando" id="carregando"><b>SUNSET</b></div>
 
+    <div class="cobAviso" aria-hidden="true"><b>☂ Evento 100% coberto</b><small>toque para ver por dentro</small></div>
     <div class="ctrl">
+      <button class="coberto" id="cobertoBtn" aria-pressed="true" title="Abrir para ver por dentro"><i>☂</i> 100% coberto</button>
       <div class="hora">
         <div class="linha"><small id="horaTxt">Pôr do sol</small><b id="horaNum">18:40</b></div>
         <input type="range" id="horaSel" min="0" max="360" value="160" aria-label="Horário do evento">
@@ -336,6 +349,6 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
 } }
 </script>
-<script type="module" src="app.js?v=8"></script>
+<script type="module" src="app.js?v=10"></script>
 </body>
 </html>

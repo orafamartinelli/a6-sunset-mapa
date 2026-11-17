@@ -24,7 +24,9 @@ const SETORES = {
   bis2:   { nome: 'Bistrô 2º andar', curto: 'Bistrô · 2º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 1 a 44',
             txt: 'Mesa alta para 6 pessoas no deck elevado, ao lado da pista.', vista: 'bis' },
   bis3:   { nome: 'Bistrô 3º andar', curto: 'Bistrô · 3º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 45 a 88',
-            txt: 'Mesa alta para 6 pessoas no deck mais alto, de frente para o palco.', vista: 'bis' },
+            txt: 'Mesa alta para 6 pessoas no deck do meio, de frente para o palco.', vista: 'bis' },
+  bis4:   { nome: 'Bistrô 4º andar', curto: 'Bistrô · 4º andar', cor: '#d24fea', preco: 'Ver na Q2', obs: 'mesa para 6 pessoas', sub: 'Bistrôs 89 a 110',
+            txt: 'O deck mais alto dos bistrôs: a pista e o palco inteiros à vista.', vista: 'bis' },
   lounge: { nome: 'Lounge patrocinador', curto: 'Lounge', cor: '#2f6b3d', preco: 'Exclusivo', obs: 'para patrocinadores', sub: 'Lounges 1 a 6, na beira da passarela',
             txt: 'Espaços dos patrocinadores, colados na passarela. Não estão à venda na Q2.', vista: 'lounge', semVenda: true },
   palco:  { nome: 'Palco', curto: 'Palco', cor: '#2a2a30', preco: 'Zezé & Luciano', obs: 'a partir das 16h', sub: 'Com passarela até a pista',
@@ -34,11 +36,11 @@ const SETORES = {
 const VISTAS = {
   geral:  { pos: [22, 21, 72],   alvo: [-16, 7, -24] },
   vip:    { pos: [4, 20, 52],    alvo: [0, 1, -6] },
-  back:   { pos: [2, 22, 18],    alvo: [0, 3, -24] },
+  back:   { pos: [2, 20, 10],    alvo: [0, 3, -27] },
   cam:    { pos: [16, 20, 34],   alvo: [-21, 4, 0] },
   bis:    { pos: [-12, 18, 34],  alvo: [21, 3, 1] },
   lounge: { pos: [0, 11, 4],     alvo: [0, 1, -18] },
-  palco:  { pos: [0, 7, 8],      alvo: [0, 5, -26] },
+  palco:  { pos: [0, 8, 6],      alvo: [0, 4.5, -28] },
   intro:  { pos: [150, 140, 260], alvo: [-10, 0, -90] },
 };
 
@@ -126,6 +128,8 @@ cena.add(ceu);
 // terreno + represa
 // ---------------------------------------------------------------------------
 const LAGO = { cx: -14, cz: -132, R: 62 };
+// pista SSHN: sai do canto sudoeste da represa e corre 1.000 m para oeste (−x)
+const PISTA = { x0: -1075, x1: -75, z: -86, w: 18 };
 const raioLago = a => LAGO.R * (1 + 0.13 * Math.sin(3 * a + 1.1) + 0.07 * Math.sin(5 * a + 2.3) + 0.04 * Math.sin(9 * a + 0.4));
 const distLago = (x, z) => { const dx = x - LAGO.cx, dz = z - LAGO.cz; return Math.hypot(dx, dz) - raioLago(Math.atan2(dz, dx)); };
 const ruido = (x, z) => Math.sin(x * 0.05 + Math.sin(z * 0.03) * 2) * Math.cos(z * 0.045 + Math.sin(x * 0.02)) ;
@@ -133,7 +137,10 @@ function altura(x, z) {
   const d = distLago(x, z);
   if (d < 0) return -0.9 + Math.max(-2.6, d * 0.2);
   const longe = Math.max(0, Math.hypot(x + 30, z + 10) - 230);
-  return 0.12 + Math.min(longe * 0.06, 14) * (0.6 + 0.4 * ruido(x * 0.6, z * 0.6)) + Math.min(d, 6) * 0.01;
+  const hh = 0.12 + Math.min(longe * 0.06, 14) * (0.6 + 0.4 * ruido(x * 0.6, z * 0.6)) + Math.min(d, 6) * 0.01;
+  // terreno plano em volta da pista de pouso
+  const dx = Math.max(0, PISTA.x0 - x, x - PISTA.x1), dz = Math.max(0, Math.abs(z - PISTA.z) - PISTA.w / 2 - 8);
+  return THREE.MathUtils.lerp(0.12, hh, THREE.MathUtils.clamp(Math.hypot(dx, dz) / 45, 0, 1));
 }
 {
   const g = new THREE.PlaneGeometry(2400, 2400, 220, 220);
@@ -181,6 +188,7 @@ const agua = new THREE.Mesh(
   })
 );
 agua.position.set(LAGO.cx, 0.06, LAGO.cz);
+Object.assign(agua.material, { polygonOffset: true, polygonOffsetFactor: 6, polygonOffsetUnits: 6 }); // some o "xadrez" (água × chão) visto de longe
 cena.add(agua);
 
 // ---------------------------------------------------------------------------
@@ -203,20 +211,67 @@ caixa(62, 0.3, 60, 0xd8d0c3, 0, 0.15, -3, { sombra: false });
 // ---------------------------------------------------------------------------
 // palco
 // ---------------------------------------------------------------------------
-caixa(18, 1.8, 8, 0x1b1b21, 0, 0.9 + 0.3, -26);
-for (const [x, z] of [[-9.2, -22.3], [9.2, -22.3], [-9.2, -29.7], [9.2, -29.7]]) caixa(0.5, 10.5, 0.5, 0, x, 5.55, z, { material: metal });
-caixa(19, 0.8, 0.6, 0, 0, 10.6, -22.3, { material: metal });
-caixa(19, 0.8, 0.6, 0, 0, 10.6, -29.7, { material: metal });
-caixa(0.6, 0.8, 8, 0, -9.2, 10.6, -26, { material: metal });
-caixa(0.6, 0.8, 8, 0, 9.2, 10.6, -26, { material: metal });
-caixa(19.4, 0.2, 8.6, 0x141418, 0, 11.1, -26);
-for (const x of [-10.4, 10.4]) caixa(1.1, 4.2, 1.1, 0x111114, x, 7.6, -22.6);
-// telão de LED
-const ledCanvas = document.createElement('canvas'); ledCanvas.width = 1024; ledCanvas.height = 440;
+// Medidas tiradas das plantas da Cenário One (escala pelos painéis de LED 0,5 × 1 m):
+// telão central 10 × 5 m, telas laterais 4,5 × 4 m, treliça 12,7 m de boca × 11,4 m de fundo,
+// 6,2 m de altura livre; backstages 8 × 10 m colados ao palco, NO MESMO NÍVEL, separados por grade.
+const PISO_PALCO = 2.5;              // topo do piso do palco (praticável de 2,2 m)
+const TOPO = PISO_PALCO + 6.2;       // topo da treliça
+caixa(13, 2.2, 11.4, 0x1b1b21, 0, 0.3 + 1.1, -27.7);           // palco: z −33,4 a −22
+caixa(11, 2.2, 2.8, 0x1b1b21, 0, 1.4, -34.8);                  // corredor backstage atrás do telão
+const trelica = mat(0xb9bcc2, { metalness: 0.7, roughness: 0.35 });
+const torre = (x, z) => caixa(0.42, TOPO - PISO_PALCO, 0.42, 0, x, (TOPO + PISO_PALCO) / 2, z, { material: trelica });
+const viga = (x0, x1, z0, z1, y = TOPO) => caixa(Math.abs(x1 - x0) + 0.42, 0.42, Math.abs(z1 - z0) + 0.42, 0, (x0 + x1) / 2, y, (z0 + z1) / 2, { material: trelica });
+for (const [x, z] of [[-6.5, -22.4], [6.5, -22.4], [-6.5, -33], [6.5, -33], [-12.2, -33], [12.2, -33]]) torre(x, z);
+viga(-6.5, 6.5, -22.4, -22.4); viga(-12.2, 12.2, -33, -33);
+viga(-6.5, -6.5, -33, -22.4); viga(6.5, 6.5, -33, -22.4);
+for (const z of [-25, -27.6, -30.2]) viga(-6.5, 6.5, z, z, TOPO - 0.15);
+// line arrays (PA) pendurados na boca do palco
+for (const x of [-6.9, 6.9]) {
+  const pa = caixa(1.1, 4.4, 0.9, 0x1a1a1f, x, PISO_PALCO + 2.7, -21.6);
+  pa.rotation.x = -0.08;
+}
+// telão de LED (10 × 5 m) + telas laterais (4,5 × 4 m)
+const ledCanvas = document.createElement('canvas'); ledCanvas.width = 1024; ledCanvas.height = 512;
 const led = ledCanvas.getContext('2d');
 const ledTex = new THREE.CanvasTexture(ledCanvas); ledTex.colorSpace = THREE.SRGBColorSpace;
-const telao = new THREE.Mesh(new THREE.PlaneGeometry(15.5, 6.6), new THREE.MeshBasicMaterial({ map: ledTex, toneMapped: false }));
-telao.position.set(0, 5.6, -29.35); cena.add(telao);
+const ledMat = new THREE.MeshBasicMaterial({ map: ledTex, toneMapped: false });
+const telao = new THREE.Mesh(new THREE.PlaneGeometry(10, 5), ledMat);
+telao.position.set(0, PISO_PALCO + 2.65, -32.55); cena.add(telao);
+for (const x of [-9.2, 9.2]) { const lat = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4), ledMat); lat.position.set(x, PISO_PALCO + 2.9, -32.7); cena.add(lat); }
+// grade (gradil de show): plano com barras vazadas + corrimão
+const gradeTex = (() => {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d');
+  g.fillStyle = '#a3a7ae'; g.fillRect(0, 0, 64, 7); g.fillRect(0, 30, 64, 4); g.fillRect(0, 58, 64, 6);
+  for (let x = 4; x < 64; x += 16) g.fillRect(x, 0, 3, 64);
+  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+function grade(x0, z0, x1, z1, y, h = 1.1) {
+  const L = Math.hypot(x1 - x0, z1 - z0);
+  const tex = gradeTex.clone(); tex.needsUpdate = true; tex.repeat.set(L / 0.6, 1);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(L, h), new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, metalness: 0.5, roughness: 0.5 }));
+  m.position.set((x0 + x1) / 2, y + h / 2, (z0 + z1) / 2); m.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+  cena.add(m); return m;
+}
+// cantores PROVISÓRIOS (serão trocados pelos bonecos 3D da dupla)
+const cantores = new THREE.Group(); cena.add(cantores);
+{
+  const pele = mat(0xc99a78), preto = mat(0x15151a, { roughness: 0.6 }), jeans = mat(0x2b3a55);
+  const fazCantor = (x, camisa, chapeu) => {
+    const g = new THREE.Group();
+    const add = (geo, m, y, px = 0, rz = 0) => { const k = new THREE.Mesh(geo, m); k.position.set(px, y, 0); k.rotation.z = rz; k.castShadow = true; g.add(k); return k; };
+    add(new THREE.BoxGeometry(0.34, 0.86, 0.2), jeans, 0.43);
+    add(new THREE.CapsuleGeometry(0.19, 0.44, 4, 12), mat(camisa), 1.15).scale.set(1.15, 1, 0.75);
+    add(new THREE.SphereGeometry(0.12, 16, 12), pele, 1.64);
+    add(new THREE.CapsuleGeometry(0.055, 0.5, 3, 8).translate(0, -0.3, 0), mat(camisa), 1.45, -0.24, -0.15);
+    const bd = add(new THREE.CapsuleGeometry(0.055, 0.5, 3, 8).translate(0, -0.3, 0), mat(camisa), 1.45, 0.24, 2.5);
+    const mic = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.2, 8), preto); mic.position.set(0, -0.62, 0); bd.add(mic);
+    if (chapeu) { add(new THREE.CylinderGeometry(0.3, 0.3, 0.025, 24), mat(chapeu), 1.74); add(new THREE.CylinderGeometry(0.12, 0.14, 0.16, 16), mat(chapeu), 1.83); }
+    else add(new THREE.SphereGeometry(0.128, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), preto, 1.66);
+    g.position.set(x, PISO_PALCO, -25.2); g.rotation.y = x < 0 ? 0.12 : -0.12; cantores.add(g);
+  };
+  fazCantor(-1.3, 0x1c1c22, 0x2a1c14);
+  fazCantor(1.3, 0xe8e2d8, null);
+}
 function desenhaTelao(t, noite) {
   const w = ledCanvas.width, h = ledCanvas.height;
   const g = led.createLinearGradient(0, 0, 0, h);
@@ -257,12 +312,17 @@ const pista = caixa(30, 0.08, 36.5, 0xeee8de, 0, 0.34, 2.75, { sombra: false });
 
 // backstages (elevados)
 const backs = [];
-for (const [x, z] of [[-21, -26], [21, -24]]) {
-  caixa(12, 3, 8, 0, x, 1.8, z, { material: estrutura });
-  backs.push(caixa(12, 0.3, 8, 0x1f6fe5, x, 3.45, z));
-  for (const s of [-1, 1]) caixa(12, 1.0, 0.06, 0, x, 4.1, z + s * 4, { material: vidro, sombra: false });
+for (const s of [-1, 1]) {
+  const x = s * 10.5;                                            // de 6,5 a 14,5 m do centro
+  caixa(8, 2.2, 10, 0, x, 1.4, -27, { material: estrutura });
+  backs.push(caixa(8, 0.1, 10, 0x1f6fe5, x, PISO_PALCO + 0.05, -27));
+  grade(s * 6.5, -32, s * 6.5, -22.2, PISO_PALCO);              // só uma grade entre o público e a dupla
+  grade(s * 6.5, -22, s * 14.5, -22, PISO_PALCO);               // frente
+  grade(s * 14.5, -32, s * 14.5, -26.4, PISO_PALCO);            // lateral (abertura da escada)
+  grade(s * 14.5, -25.1, s * 14.5, -22, PISO_PALCO);
+  // escada de acesso pelo lado de fora
+  for (let k = 0; k < 10; k++) { const h = (k + 1) * 0.22; caixa(1.6, h, 0.5, 0, s * 15.3, 0.3 + h / 2, -21.25 - k * 0.5, { material: estrutura }); }
 }
-caixa(12, 0.3, 3, 0x9a958d, 21, 0.45, -18.5);
 
 // ---------------------------------------------------------------------------
 // camarotes (3 andares escalonados, 12 por andar)
@@ -284,23 +344,66 @@ for (let andar = 1; andar <= 3; andar++) {
   }
   caixa(0.1, 1.15, 12 * CAM.passo, 0, x - 1.95, 0.3 + y + 0.85, CAM.z0 + 6 * CAM.passo, { material: mat(0xe8e1d6) });
 }
-// cobertura tensionada sobre os camarotes
-{
-  const lona = new THREE.Mesh(new THREE.PlaneGeometry(13, 42, 12, 24), new THREE.MeshStandardMaterial({ color: 0xfff6ea, roughness: 0.9, side: THREE.DoubleSide, transparent: true, opacity: 0.92 }));
-  const p = lona.geometry.attributes.position;
-  for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin((p.getY(i) / 42 + 0.5) * Math.PI * 6) * 0.35 * Math.cos(p.getX(i) / 13 * Math.PI));
-  lona.geometry.computeVertexNormals();
-  lona.rotation.x = -Math.PI / 2; lona.rotation.y = -0.12;
-  lona.position.set(-21.2, 12.2, 0.5); lona.castShadow = true; cena.add(lona);
-  for (const z of [-20, -6, 8, 21]) for (const x of [-27]) caixa(0.22, x < -20 ? 13.4 : 11.6, 0.22, 0, x, (x < -20 ? 13.4 : 11.6) / 2 + 0.3, z, { material: metal });
+// ---------------------------------------------------------------------------
+// cobertura total em arco (evento 100% coberto) — sem pilar dentro: colunas só nas bordas (x = ±30)
+// ---------------------------------------------------------------------------
+const COB = { x: 33, z0: -37.5, z1: 22.5, beiral: 10, flecha: 8, n: 8 };
+const yArco = x => COB.beiral + COB.flecha * (1 - (x / COB.x) ** 2);
+const passoCob = (COB.z1 - COB.z0) / COB.n;
+function geoLona(comp) {
+  const sx = 30, sv = 6, pos = [], idx = [];
+  for (let jj = 0; jj <= sv; jj++) for (let i = 0; i <= sx; i++) { const x = -COB.x + 2 * COB.x * i / sx, v = jj / sv; pos.push(x, yArco(x) - Math.sin(Math.PI * v) * 0.55, v * comp); }
+  for (let jj = 0; jj < sv; jj++) for (let i = 0; i < sx; i++) { const a = jj * (sx + 1) + i, b = a + 1, c = a + sx + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
+const paineis = [];
+const lonaFantasma = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false });
+{
+  const gL = geoLona(passoCob);
+  for (let k = 0; k < COB.n; k++) {
+    const z = COB.z0 + k * passoCob;
+    const m = new THREE.Mesh(gL, new THREE.MeshStandardMaterial({ color: 0xfbf6ee, roughness: 0.85, side: THREE.DoubleSide, transparent: true, opacity: 0.97 }));
+    m.position.z = z; cena.add(m); paineis.push(m);
+    const f = new THREE.Mesh(gL, lonaFantasma); f.position.z = z; f.renderOrder = 3; cena.add(f);
+  }
+  const metalCob = mat(0xe4e0d8, { metalness: 0.55, roughness: 0.4 });
+  const pts = []; for (let i = 0; i <= 40; i++) { const x = -COB.x + 2 * COB.x * i / 40; pts.push(new THREE.Vector3(x, yArco(x) + 0.05, 0)); }
+  const gArco = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.16, 6, false);
+  for (let k = 0; k <= COB.n; k++) {
+    const z = COB.z0 + k * passoCob;
+    const a = new THREE.Mesh(gArco, metalCob); a.position.z = z; cena.add(a);
+    for (const x of [-COB.x, COB.x]) caixa(0.36, COB.beiral, 0.36, 0, x, COB.beiral / 2 + 0.05, z, { material: metalCob });
+  }
+  for (const x of [-COB.x, COB.x]) caixa(0.3, 0.3, COB.z1 - COB.z0, 0, x, COB.beiral, (COB.z0 + COB.z1) / 2, { material: metalCob });
+}
+let cob = { k: 0, de: 0, para: 0, t0: 0, ms: 1, mexeu: false };
+const btCob = document.getElementById('cobertoBtn');
+function abreCobertura(abrir, ms = 2600) {
+  cob = { ...cob, de: cob.k, para: abrir ? 1 : 0, t0: performance.now(), ms };
+  btCob.setAttribute('aria-pressed', String(!abrir));
+  btCob.title = abrir ? 'Ver a cobertura do evento' : 'Abrir para ver por dentro';
+}
+function passoCobertura() {
+  const kk = Math.min(1, (performance.now() - cob.t0) / cob.ms);
+  cob.k = cob.de + (cob.para - cob.de) * ease(kk);
+  for (let i = 0; i < COB.n; i++) {
+    const ordem = COB.n - 1 - i;                                   // abre da entrada para o palco
+    const ki = THREE.MathUtils.clamp(cob.k * 1.8 - ordem / COB.n * 0.8, 0, 1);
+    const p = paineis[i]; p.scale.z = Math.max(0.001, 1 - ease(ki)); p.visible = ki < 0.995;
+    p.material.opacity = 0.97 - ki * 0.35;
+  }
+  lonaFantasma.opacity = 0.06 * cob.k;
+  document.body.classList.toggle('cobFechada', cob.k < 0.35);
+}
+btCob.addEventListener('click', () => { cob.mexeu = true; abreCobertura(cob.para === 0); });
 
 // ---------------------------------------------------------------------------
 // bistrôs (decks elevados, 88 mesas altas)
 // ---------------------------------------------------------------------------
 const BIS = { z0: -16.2, passo: 1.66 };
-const decks = [{ x: 18, y: 1.6, setor: 'bis2', cols: [16.5, 19.5], base: 0 }, { x: 24, y: 3.2, setor: 'bis3', cols: [22.5, 25.5], base: 44 }];
-const nBis = 88;
+const decks = [{ x: 18, y: 1.6, setor: 'bis2', cols: [16.5, 19.5], base: 0 }, { x: 24, y: 3.2, setor: 'bis3', cols: [22.5, 25.5], base: 44 },
+  { x: 28.7, y: 4.8, setor: 'bis4', cols: [28.7], base: 88, w: 3.4 }];
+const nBis = 110;
 const gTampo = new THREE.CylinderGeometry(0.42, 0.42, 0.06, 22), gPe = new THREE.CylinderGeometry(0.05, 0.07, 1.0, 8);
 const gBanco = new THREE.CylinderGeometry(0.17, 0.17, 0.06, 12), gPeB = new THREE.CylinderGeometry(0.03, 0.04, 0.72, 6);
 const tampos = new THREE.InstancedMesh(gTampo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }), nBis);
@@ -312,9 +415,10 @@ const COR_TAMPO = new THREE.Color(0xf6f0e6), COR_SOL = new THREE.Color(0xffc21a)
 {
   const o = new THREE.Object3D(); let k = 0;
   for (const d of decks) {
-    caixa(6, d.y, 37.4, 0, d.x, 0.3 + d.y / 2, BIS.z0 + 11 * BIS.passo + 0.2, { material: estrutura });
-    caixa(6, 0.2, 37.4, 0, d.x, 0.3 + d.y + 0.1, BIS.z0 + 11 * BIS.passo + 0.2, { material: mat(0x8f9aa3) });
-    caixa(0.06, 1.0, 37.4, 0, d.x - 3, 0.3 + d.y + 0.7, BIS.z0 + 11 * BIS.passo + 0.2, { material: vidro, sombra: false });
+    const dw = d.w || 6;
+    caixa(dw, d.y, 37.4, 0, d.x, 0.3 + d.y / 2, BIS.z0 + 11 * BIS.passo + 0.2, { material: estrutura });
+    caixa(dw, 0.2, 37.4, 0, d.x, 0.3 + d.y + 0.1, BIS.z0 + 11 * BIS.passo + 0.2, { material: mat(0x8f9aa3) });
+    caixa(0.06, 1.0, 37.4, 0, d.x - dw / 2, 0.3 + d.y + 0.7, BIS.z0 + 11 * BIS.passo + 0.2, { material: vidro, sombra: false });
     d.cols.forEach((cx, ci) => {
       for (let i = 0; i < 22; i++) {
         const num = d.base + ci * 22 + i + 1;
@@ -338,19 +442,79 @@ lounges.forEach((l, i) => lugares.push({ id: 'l' + (i + 1), tipo: 'lounge', seto
 // ---------------------------------------------------------------------------
 // público, varais de luz, feixes do palco
 // ---------------------------------------------------------------------------
-{
-  const roupas = [0xf3eee6, 0x1d1d22, 0x3b5f8a, 0xb23a3a, 0xd9c3a0, 0x6e7f5a, 0xff8a6a, 0x8a5a9a].map(c => new THREE.Color(c));
-  const n = 520, gente = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.22, 0.95, 3, 8), mat(0xffffff, { roughness: 0.9 }), n);
-  const o = new THREE.Object3D(); let i = 0;
-  const poe = (x, y, z) => { o.position.set(x, y + 0.7, z); o.updateMatrix(); gente.setMatrixAt(i, o.matrix); gente.setColorAt(i, roupas[(Math.random() * roupas.length) | 0]); i++; };
-  while (i < 400) { const z = -15 + Math.pow(Math.random(), 1.6) * 35, x = (Math.random() - 0.5) * 28; poe(x, 0.38, z); }
-  for (const l of lugares) {
-    if (i >= n) break;
-    if (l.tipo === 'cam' && Math.random() < 0.7) { for (let k = 0; k < 3 && i < n; k++) poe(l.topo.x + (Math.random() - 0.5) * 2.6, l.topo.y - 1.6 + 0.14, l.topo.z + (Math.random() - 0.5) * 2); }
-    if (l.tipo === 'bis' && Math.random() < 0.35 && i < n) poe(l.topo.x + 0.62, l.topo.y - 1.5, l.topo.z);
+// público: pernas, tronco, cabeça, cabelo ou chapéu, dois braços (parte dança com braço pra cima)
+const GENTE = [];
+const animaGente = (() => {
+  const rnd = (a) => a[(Math.random() * a.length) | 0];
+  const pessoa = (x, y, z, o = {}) => GENTE.push({ x, y, z, rot: Math.atan2(0 - x, -28 - z), cima: !!o.cima, danca: !!o.danca,
+    fase: Math.random() * 6.28, vel: 2.2 + Math.random() * 1.0, chapeu: Math.random() < (o.pChapeu ?? 0.22), esc: 0.9 + Math.random() * 0.16 });
+  for (let i = 0; i < 420; i++) {
+    const z = -14.5 + Math.pow(Math.random(), 1.5) * 34, x = (Math.random() - 0.5) * 27.5;
+    pessoa(x, 0.38, z, { danca: true, cima: Math.random() < (z < 0 ? 0.32 : 0.14) });
   }
-  gente.count = i; gente.castShadow = true; gente.instanceColor.needsUpdate = true; cena.add(gente);
-}
+  for (const s of [-1, 1]) for (let i = 0; i < 18; i++) {
+    const x = s * (7.0 + Math.pow(Math.random(), 1.6) * 6.8), z = -31.5 + Math.random() * 9;
+    if (Math.abs(x) < 9.6 && Math.abs(z + 25.6) < 1.8) continue;   // deixa livre o lugar da "sua vista"
+    pessoa(x, PISO_PALCO + 0.1, z, { danca: true, cima: Math.random() < 0.25 });
+  }
+  for (const l of lugares) {
+    if (l.tipo === 'cam' && Math.random() < 0.7) for (let k = 0; k < 3; k++) pessoa(l.topo.x + (Math.random() - 0.5) * 2.6, l.topo.y - 1.46, l.topo.z + (Math.random() - 0.5) * 2, { danca: Math.random() < 0.5 });
+    if (l.tipo === 'bis' && Math.random() < 0.35) pessoa(l.topo.x + 0.62, l.topo.y - 1.5, l.topo.z);
+  }
+  for (const l of lounges) for (let k = 0; k < 3; k++) pessoa(l.x + (Math.random() - 0.5) * 3, 0.8, -17.6 + Math.random() * 1.6, { pChapeu: 0.1 });
+  const N = GENTE.length;
+  const g = {
+    pernas: new THREE.BoxGeometry(0.32, 0.8, 0.2).translate(0, 0.4, 0),
+    tronco: new THREE.CapsuleGeometry(0.18, 0.42, 4, 10).scale(1.15, 1, 0.72).translate(0, 1.12, 0),
+    cabeca: new THREE.SphereGeometry(0.115, 12, 10).translate(0, 1.6, 0),
+    cabelo: new THREE.SphereGeometry(0.124, 12, 6, 0, Math.PI * 2, 0, Math.PI * 0.55).translate(0, 1.62, 0),
+    aba: new THREE.CylinderGeometry(0.29, 0.29, 0.025, 16).translate(0, 1.7, 0),
+    copa: new THREE.CylinderGeometry(0.115, 0.135, 0.15, 12).translate(0, 1.79, 0),
+    braco: new THREE.CapsuleGeometry(0.05, 0.48, 3, 6).translate(0, -0.29, 0),
+  };
+  const im = {};
+  for (const k of ['pernas', 'tronco', 'cabeca', 'cabelo', 'aba', 'copa', 'bracoE', 'bracoD']) {
+    im[k] = new THREE.InstancedMesh(k.startsWith('braco') ? g.braco : g[k], mat(0xffffff, { roughness: 0.85 }), N);
+    im[k].frustumCulled = false; cena.add(im[k]);
+  }
+  im.tronco.castShadow = im.pernas.castShadow = true;
+  const C = a => a.map(c => new THREE.Color(c));
+  const roupas = C([0xf3eee6, 0x1d1d22, 0x3b5f8a, 0xb23a3a, 0xd9c3a0, 0x6e7f5a, 0xff8a6a, 0x8a5a9a, 0xffffff, 0x2a6f6a, 0xe6b84a]);
+  const calcas = C([0x23314d, 0x2b3a55, 0x1b1b20, 0x4a4f5a, 0xcfc6b5, 0x3b2e26]);
+  const peles = C([0xf1c9a5, 0xe0ac84, 0xc68d62, 0x9a6a46, 0x6e4a31]);
+  const cabelos = C([0x1a1410, 0x2e2118, 0x4a3324, 0x7a5a3a, 0xc9a46a, 0x111111]);
+  const chapeus = C([0xd8c9a0, 0x2a1c14, 0x111114, 0x6b4a2e, 0xf0ead8]);
+  GENTE.forEach((p, i) => {
+    const pele = rnd(peles), chap = rnd(chapeus);
+    im.pernas.setColorAt(i, rnd(calcas)); im.tronco.setColorAt(i, rnd(roupas)); im.cabeca.setColorAt(i, pele);
+    im.cabelo.setColorAt(i, rnd(cabelos)); im.aba.setColorAt(i, chap); im.copa.setColorAt(i, chap);
+    const manga = Math.random() < 0.5 ? pele : null;
+    p.manga = manga;
+  });
+  const tmp = new THREE.Color();
+  GENTE.forEach((p, i) => { im.tronco.getColorAt(i, tmp); const c = p.manga || tmp; im.bracoE.setColorAt(i, c); im.bracoD.setColorAt(i, c); });
+  for (const k in im) im[k].instanceColor.needsUpdate = true;
+  const ZERO = new THREE.Matrix4().makeScale(0, 0, 0), B = new THREE.Matrix4(), L = new THREE.Matrix4(), M = new THREE.Matrix4();
+  const V = new THREE.Vector3(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), EY = new THREE.Vector3(0, 1, 0), EZ = new THREE.Vector3(0, 0, 1), Q2b = new THREE.Quaternion(), UM = new THREE.Vector3(1, 1, 1);
+  const poe = (i, p, t) => {
+    const pulo = p.danca ? Math.abs(Math.sin(t * p.vel + p.fase)) * 0.055 : 0;
+    B.compose(V.set(p.x, p.y + pulo, p.z), Q.setFromAxisAngle(EY, p.rot), S.setScalar(p.esc));
+    im.pernas.setMatrixAt(i, B); im.tronco.setMatrixAt(i, B); im.cabeca.setMatrixAt(i, B);
+    im.cabelo.setMatrixAt(i, p.chapeu ? ZERO : B); im.aba.setMatrixAt(i, p.chapeu ? B : ZERO); im.copa.setMatrixAt(i, p.chapeu ? B : ZERO);
+    const onda = p.danca ? Math.sin(t * p.vel * 0.5 + p.fase) * (p.cima ? 0.2 : 0.06) : 0;
+    for (const [lado, mesh] of [[-1, im.bracoE], [1, im.bracoD]]) {
+      const ang = lado * (p.cima ? Math.PI - 0.42 + onda * lado : 0.12 + Math.abs(onda));
+      L.compose(V.set(lado * 0.24, 1.42, 0), Q2b.setFromAxisAngle(EZ, ang), UM);
+      mesh.setMatrixAt(i, M.multiplyMatrices(B, L));
+    }
+  };
+  GENTE.forEach((p, i) => poe(i, p, 0));
+  const dancam = GENTE.map((p, i) => [p, i]).filter(([p]) => p.danca);
+  return t => {
+    for (const [p, i] of dancam) poe(i, p, t);
+    for (const k in im) im[k].instanceMatrix.needsUpdate = true;
+  };
+})();
 const lampadas = []; let lamp;
 {
   const fios = [-10, -4, 2, 8, 14, 19.5];
@@ -373,11 +537,11 @@ const feixes = [];
   const cores = [0xffc21a, 0xff5a4e, 0xd24fea, 0xffffff, 0xff8a2a, 0x4b9bff, 0xffc21a, 0xff5a4e];
   cores.forEach((c, i) => {
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    m.position.set(-8 + i * (16 / 7), 10.1, -22.6); cena.add(m); feixes.push({ m, f: 0.6 + i * 0.13, fase: i * 0.9 });
+    m.position.set(-6 + i * (12 / 7), TOPO - 0.3, -22.8); cena.add(m); feixes.push({ m, f: 0.6 + i * 0.13, fase: i * 0.9 });
   });
 }
 const luzPalco = new THREE.SpotLight(0xffb070, 0, 70, 0.75, 0.6, 1.2);
-luzPalco.position.set(0, 10, -20); luzPalco.target.position.set(0, 0, 4); cena.add(luzPalco, luzPalco.target);
+luzPalco.position.set(0, TOPO + 1, -20); luzPalco.target.position.set(0, 0, 4); cena.add(luzPalco, luzPalco.target);
 const luzPista = new THREE.PointLight(0xffc37a, 0, 40, 1.4); luzPista.position.set(0, 7, 3); cena.add(luzPista);
 
 // ---------------------------------------------------------------------------
@@ -397,7 +561,7 @@ const pilulaExtra = [{ t: 'REPRESA SENDESKI', p: [-78, 4, -126] }];
     if (d < 3) continue;
     if (x > -60 && x < 90 && z > -50 && z < 130) continue;
     if (Math.abs(x - 110) < 14) continue;
-    if (Math.abs(z + 300) < 20 && x > -200 && x < 300) continue;
+    if (Math.abs(z - PISTA.z) < 45 && x > PISTA.x0 - 60 && x < PISTA.x1 + 25) continue;
     if (Math.random() > (d < 28 ? 0.95 : 0.22)) continue;
     const s = 2.4 + Math.random() * 2.8, y = altura(x, z);
     o.position.set(x, y + s * 0.9, z); o.scale.set(s, s * (0.75 + Math.random() * 0.35), s); o.rotation.y = Math.random() * 6; o.updateMatrix();
@@ -427,22 +591,62 @@ const pilulaExtra = [{ t: 'REPRESA SENDESKI', p: [-78, 4, -126] }];
 }
 caixa(16, 0.06, 1400, 0x3a3836, 110, 0.05, 0, { sombra: false });
 for (let z = -680; z < 680; z += 14) caixa(0.3, 0.07, 6, 0xe8c64a, 110, 0.07, z, { sombra: false });
-caixa(520, 0.06, 22, 0x8e8b85, 60, 0.04, -300, { sombra: false });
-for (let x = -180; x < 300; x += 22) caixa(10, 0.07, 0.8, 0xf2f2f2, x, 0.06, -300, { sombra: false });
+// pista de pouso SSHN — RWY 10/28, asfalto 1.000 × 18 m
+{
+  const L = PISTA.x1 - PISTA.x0, cx = (PISTA.x0 + PISTA.x1) / 2, Z = PISTA.z;
+  caixa(L + 60, 0.04, PISTA.w + 26, 0x86a64a, cx, 0.13, Z, { sombra: false, material: mat(0x86a64a, { roughness: 1 }) });
+  caixa(L, 0.08, PISTA.w, 0x45464a, cx, 0.17, Z, { sombra: false });
+  for (const s of [-1, 1]) caixa(L, 0.09, 0.35, 0xf2f2f2, cx, 0.18, Z + s * (PISTA.w / 2 - 0.6), { sombra: false });
+  for (let x = PISTA.x0 + 70; x < PISTA.x1 - 70; x += 30) caixa(15, 0.09, 0.45, 0xf2f2f2, x, 0.18, Z, { sombra: false });
+  for (const [xe, s] of [[PISTA.x0, 1], [PISTA.x1, -1]]) for (const k of [-3, -2, -1, 1, 2, 3]) caixa(14, 0.09, 1.1, 0xf2f2f2, xe + s * 11, 0.18, Z + k * 2.3, { sombra: false });
+  const numero = (txt, x, rot) => {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
+    g.fillStyle = '#f2f2f2'; g.font = '800 190px "Unbounded", "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 128, 136);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(13, 13).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }));
+    m.position.set(x, 0.2, Z); m.rotation.y = rot; cena.add(m);
+  };
+  numero('10', PISTA.x0 + 34, -Math.PI / 2);   // pouso rumo leste
+  numero('28', PISTA.x1 - 34, Math.PI / 2);    // pouso rumo oeste
+  // pátio com hangar e aviões, ao sul da cabeceira 28 (entre a pista e o evento)
+  const hx = PISTA.x1 - 40, hz = Z + 30;
+  caixa(46, 0.06, 26, 0x6d6e72, hx, 0.14, hz, { sombra: false });
+  caixa(20, 5, 14, 0, hx - 12, 2.6, hz + 4, { material: mat(0xd9d6cf) });
+  const teto = new THREE.Mesh(new THREE.CylinderGeometry(7.2, 7.2, 20.4, 20, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), mat(0xb8bcc2, { metalness: 0.4, roughness: 0.5 }));
+  teto.rotation.y = Math.PI / 2; teto.scale.set(1, 0.32, 1); teto.position.set(hx - 12, 5.1, hz + 4); teto.castShadow = true; cena.add(teto);
+  const aviao = (x, z, rot, cor) => {
+    const g = new THREE.Group(), branco = mat(0xf4f4f2, { roughness: 0.4 }), faixa = mat(cor);
+    const fus = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 5.2, 4, 12).rotateZ(Math.PI / 2), branco); fus.position.y = 1.3; g.add(fus);
+    const asa = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.14, 10), branco); asa.position.set(0.6, 1.85, 0); g.add(asa);
+    const ponta = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 10.02), faixa); ponta.position.set(1.15, 1.86, 0); g.add(ponta);
+    const lem = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 0.12), faixa); lem.position.set(-3.1, 2.2, 0); g.add(lem);
+    const prof = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 3.4), branco); prof.position.set(-3.1, 1.55, 0); g.add(prof);
+    for (const [px, pz] of [[1.6, 0], [-0.6, 1.1], [-0.6, -1.1]]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.16, 12).rotateX(Math.PI / 2), mat(0x1a1a1a)); r.position.set(px, 0.42, pz); g.add(r); }
+    g.traverse(o => { o.castShadow = true; });
+    g.position.set(x, 0.14, z); g.rotation.y = rot; cena.add(g);
+  };
+  aviao(hx + 6, hz - 4, 0.5, 0xc8312b);
+  aviao(hx + 16, hz + 5, -0.3, 0x1f4fa8);
+  // biruta
+  caixa(0.15, 6, 0.15, 0, PISTA.x1 - 70, 3.1, Z - 22, { material: metal });
+  const biruta = new THREE.Mesh(new THREE.ConeGeometry(0.45, 2.6, 12, 1, true).rotateZ(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xff6a1a, side: THREE.DoubleSide }));
+  biruta.position.set(PISTA.x1 - 70 - 1.4, 5.8, Z - 22); cena.add(biruta);
+  pilulaExtra.push({ t: 'PISTA DE POUSO', p: [PISTA.x1 - 160, 8, Z] });
+}
 
 // ---------------------------------------------------------------------------
 // rótulos HTML (pílulas de setor + números)
 // ---------------------------------------------------------------------------
 const camada = document.getElementById('camada');
 const pilulas = [
-  { t: 'PALCO', p: [0, 12.6, -26], cls: 'branca', st: 'palco', cor: '#fff', txtCor: '#2a2a30' },
-  { t: 'BACKSTAGE', p: [-21, 5.6, -27], cls: 'branca', st: 'back', perto: 70 },
-  { t: 'BACKSTAGE', p: [21, 5.6, -25], cls: 'branca', st: 'back' },
+  { t: 'PALCO', p: [0, TOPO + 1.6, -28], cls: 'branca', st: 'palco', cor: '#fff', txtCor: '#2a2a30' },
+  { t: 'BACKSTAGE', p: [-10.5, PISO_PALCO + 2.6, -27], cls: 'branca', st: 'back', perto: 70 },
+  { t: 'BACKSTAGE', p: [10.5, PISO_PALCO + 2.6, -27], cls: 'branca', st: 'back' },
   { t: 'LOUNGES PATROCINADORES', p: [0, 2.6, -15.6], st: 'lounge', bg: '#ffffff', txtCor: '#2f6b3d', perto: 48, peq: true },
   { t: 'VIP PREMIUM', p: [0, 2.4, 9], st: 'vip', bg: '#2e8b14' },
   { t: 'CAMAROTES', p: [-23, 13.5, 20], st: 'cam1', bg: '#4b4bf0' },
   { t: 'BISTRÔS', p: [22.5, 6.4, 20], st: 'bis2', bg: '#d24fea' },
-  { t: 'ACESSOS', p: [21, 2.0, -18.5], st: null, bg: 'rgba(30,20,30,.75)', peq: true, perto: 40 },
+  { t: 'ACESSOS', p: [15.3, 3.4, -23.5], st: null, bg: 'rgba(30,20,30,.75)', peq: true, perto: 40 },
   ...pilulaExtra.map(e => ({ ...e, st: null, cls: 'local' })),
 ].map(d => {
   const el = document.createElement('div');
@@ -573,13 +777,13 @@ function escolheSetor(st) {
 function fechaFicha() { ficha.classList.remove('on'); selId = null; setorAtivo = null; gravaHash(''); saiDoOlho(); pinta(); }
 
 // "Ver a vista daqui": câmera na altura dos olhos, olhando para o palco
-const PALCO_OLHAR = [0, 5.6, -27];
+const PALCO_OLHAR = [0, PISO_PALCO + 1.9, -28.5];
 const OLHO_SETOR = {
   vip: { pos: [2, 2.1, 7], alvo: PALCO_OLHAR },
-  back: { pos: [-17.5, 5.3, -23], alvo: [0, 3.6, -25] },
+  back: { pos: [-7.4, PISO_PALCO + 1.65, -25.6], alvo: [0, PISO_PALCO + 1.6, -26.6] },
   lounge: { pos: [-7.5, 2.5, -16.5], alvo: PALCO_OLHAR },
-  palco: { pos: [0, 3.9, -24.5], alvo: [0, 2.5, 12] },
-  cam1: { lugar: 'c7' }, cam2: { lugar: 'c19' }, cam3: { lugar: 'c31' }, bis2: { lugar: 'b12' }, bis3: { lugar: 'b56' },
+  palco: { pos: [0, PISO_PALCO + 1.7, -24.2], alvo: [0, 2.5, 12] },
+  cam1: { lugar: 'c7' }, cam2: { lugar: 'c19' }, cam3: { lugar: 'c31' }, bis2: { lugar: 'b12' }, bis3: { lugar: 'b56' }, bis4: { lugar: 'b100' },
 };
 let noOlho = false;
 const btVista = document.getElementById('fVista');
@@ -599,6 +803,7 @@ function entraNoOlho() {
   else if (setorAtivo) { const s = OLHO_SETOR[setorAtivo]; o = s.lugar ? olhoDoLugar(porId.get(s.lugar)) : s; nome = SETORES[setorAtivo].nome; }
   if (!o) return;
   const st = selId ? porId.get(selId).setor : setorAtivo;
+  if (cob.para === 0) abreCobertura(true, 700);
   noOlho = true;
   document.body.classList.add('olho');
   document.getElementById('olhoNome').textContent = nome;
@@ -676,7 +881,7 @@ window.addEventListener('hashchange', leHash);
 // ---------------------------------------------------------------------------
 // painel: setores, busca, cartões
 // ---------------------------------------------------------------------------
-const ORDEM = ['vip', 'back', 'cam1', 'cam2', 'cam3', 'bis2', 'bis3', 'lounge'];
+const ORDEM = ['vip', 'back', 'cam1', 'cam2', 'cam3', 'bis2', 'bis3', 'bis4', 'lounge'];
 const boxSet = document.getElementById('setores'), boxCart = document.getElementById('cartoes');
 for (const st of ORDEM) {
   const S = SETORES[st];
@@ -708,7 +913,7 @@ document.getElementById('busca').addEventListener('submit', e => {
   if (id && porId.has(id)) { sug.innerHTML = ''; return seleciona(id, true); }
   const ops = [];
   if (n <= 36) ops.push(['c' + n, 'Camarote ' + n]);
-  if (n <= 88) ops.push(['b' + n, 'Bistrô ' + n]);
+  if (n <= 110) ops.push(['b' + n, 'Bistrô ' + n]);
   if (n <= 6) ops.push(['l' + n, 'Lounge ' + n]);
   if (!ops.length) return avisa('Não existe lugar ' + n + ' no mapa');
   if (ops.length === 1) return seleciona(ops[0][0], true);
@@ -769,6 +974,7 @@ canvas.addEventListener('pointerdown', e => {
 canvas.addEventListener('pointerup', e => {
   if (noOlho) return;
   if (!baixo || Math.hypot(e.clientX - baixo[0], e.clientY - baixo[1]) > 6) return;
+  if (cob.para === 0) { cob.mexeu = true; abreCobertura(true, 1500); return; }
   const a = acerta(e);
   if (a?.lugar) seleciona(a.lugar.id, true);
   else if (a?.setor) escolheSetor(a.setor);
@@ -842,11 +1048,16 @@ function quadro() {
     if (v.z > 1) { l.tag.classList.add('longe'); continue; }
     l.tag.style.left = ((v.x + 1) / 2 * w) + 'px'; l.tag.style.top = ((-v.y + 1) / 2 * h) + 'px';
   }
+  passoCobertura();
+  if (quadroN % 2 === 0) animaGente(t);
+  cantores.children.forEach((c, i) => { c.position.y = PISO_PALCO + Math.abs(Math.sin(t * 2.1 + i * 1.7)) * 0.03; });
   renderer.render(cena, cam);
   if (!introFeita && quadroN === 3) {
     introFeita = true;
     document.getElementById('carregando').classList.add('fora');
     if (!leHash()) vista('geral', 5200);
+    // entra com o evento FECHADO (100% coberto) e a cobertura recolhe sozinha
+    setTimeout(() => { if (!cob.mexeu && cob.para === 0) abreCobertura(true, 2800); }, leHash() ? 600 : 2000);
   }
   requestAnimationFrame(quadro);
 }
