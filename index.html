@@ -70,6 +70,13 @@ button{font-family:inherit}
 .num{position:absolute;transform:translate(-50%,-100%);font:700 10px var(--f-txt);color:#fff;background:rgba(20,8,18,.78);border:1px solid rgba(255,255,255,.18);padding:2px 6px;border-radius:6px;white-space:nowrap;pointer-events:auto;cursor:pointer;transition:opacity .25s}
 .num.sel{background:var(--sol);color:#3a0d12;border-color:var(--sol);transform:translate(-50%,-100%) scale(1.4);z-index:3}
 .num.longe{opacity:0;pointer-events:none}
+.num.livre{background:var(--sol);color:#3a0d12;border-color:#fff3c4;box-shadow:0 0 0 0 rgba(255,194,26,.6);animation:livre 2.2s infinite}
+.num.vendido{background:rgba(20,8,18,.45);color:rgba(255,255,255,.55);border-color:transparent;text-decoration:line-through}
+.num.livre.sel{animation:none}
+@keyframes livre{70%{box-shadow:0 0 0 7px rgba(255,194,26,0)}100%{box-shadow:0 0 0 0 rgba(255,194,26,0)}}
+.legVendas{display:none;gap:12px;align-items:center;background:var(--vidro);backdrop-filter:blur(12px);border:1px solid var(--linha);border-radius:999px;padding:7px 12px;font:700 11px var(--f-txt);color:var(--creme)}
+.legVendas i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+body.comVendas .legVendas{display:inline-flex}
 
 /* painel lateral */
 .painel{position:absolute;top:84px;left:max(16px, env(safe-area-inset-left,0px));width:330px;max-height:calc(100% - 100px);overflow:auto;background:var(--vidro);backdrop-filter:blur(14px);border:1px solid var(--linha);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:16px;z-index:3;scrollbar-width:thin}
@@ -251,6 +258,7 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
     <div class="cobAviso" aria-hidden="true"><b>☂ Evento 100% coberto</b><small>Represa Sendeski · Maringá</small></div>
     <button class="pular" id="pularIntro">Pular ›</button>
     <div class="ctrl">
+      <div class="legVendas"><span><i style="background:var(--sol)"></i>Livre</span><span><i style="background:rgba(255,255,255,.3)"></i>Vendido</span></div>
       <button class="coberto" id="cobertoBtn" aria-pressed="true" title="Abrir para ver por dentro"><i>☂</i> 100% coberto</button>
       <div class="hora">
         <div class="linha"><small id="horaTxt">Pôr do sol</small><b id="horaNum">18:40</b></div>
@@ -275,7 +283,7 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
       <p id="fTxt"></p>
       <button class="btn vista" id="fVista" aria-pressed="false">👁 Ver a vista daqui</button>
       <div class="acoes">
-        <a class="btn sol" id="fComprar" data-rastreio-cta="comprar-ficha" href="#" target="_blank" rel="noopener">Comprar na Q2</a>
+        <a class="btn sol" id="fComprar" data-rastreio-cta="comprar-ficha" href="#" target="_blank" rel="noopener">Compre agora</a>
         <button class="btn vidro" id="fLink">Copiar link</button>
       </div>
     </div>
@@ -316,7 +324,7 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
     <h2 class="titulo">Do gramado ao <em>3º andar</em>.</h2>
     <p class="lead">Sete jeitos de viver o mesmo pôr do sol. Toque num setor para ver onde ele fica no mapa.</p>
     <div class="cartoes" id="cartoes"></div>
-    <div class="obs">Valores do lote 1 na Q2 Ingressos, sem as taxas. Preço e disponibilidade podem mudar: o que vale é o site da Q2.</div>
+    <div class="obs">Valores do lote 1 (Q2 Ingressos), sem as taxas. Preço e disponibilidade podem mudar: confirme no WhatsApp de vendas.</div>
   </div>
 </section>
 
@@ -342,7 +350,7 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
 <section class="atracao"><img src="atracao.jpg" alt="Zezé Di Camargo & Luciano, a partir das 16h" width="1080" height="400" loading="lazy"></section>
 
 <footer class="rodape">
-  <a class="btn sol" id="rodComprar" data-rastreio-cta="ingressos-rodape" href="#" target="_blank" rel="noopener">Garantir meu ingresso na Q2</a>
+  <a class="btn sol" id="rodComprar" data-rastreio-cta="ingressos-rodape" href="#" target="_blank" rel="noopener">Garantir meu ingresso</a>
   <div><b>Sunset Experience na Represa</b> · First Edition · realização A6 Produções e LG</div>
   <div>O mapa 3D é uma representação ilustrativa da planta oficial do evento.</div>
 </footer>
@@ -353,6 +361,6 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
 } }
 </script>
-<script type="module" src="app.js?v=11"></script>
+<script type="module" src="app.js?v=12"></script>
 </body>
 </html>

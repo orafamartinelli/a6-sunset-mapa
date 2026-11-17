@@ -8,7 +8,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // ============================================================================
 
 const Q2 = 'https://q2ingressos.com.br/events/sunset-experience-na-represa-com-zeze-di-camargo-luciano?utm_source=mapa3d&utm_medium=site&utm_campaign=sunset-zeze';
-for (const id of ['topoComprar', 'rodComprar', 'fComprar']) document.getElementById(id).href = Q2;
+// vendas: tudo pelo WhatsApp (pedido do Rafa 17/11) — a mensagem já leva o lugar escolhido
+const ZAP = '554498579760';
+const linkZap = lugar => 'https://wa.me/' + ZAP + '?text=' + encodeURIComponent(
+  'Olá! Vi o mapa do Sunset Experience (Zezé Di Camargo & Luciano · 05/12) e quero comprar' + (lugar ? ': ' + lugar + '.' : ' ingresso.'));
+for (const id of ['topoComprar', 'rodComprar', 'fComprar']) document.getElementById(id).href = linkZap('');
+// disponibilidade: planilha da A6 publicada como CSV (colunas: lugar, status). Vazio = sem indicação.
+const VENDAS = { csv: '', aCada: 60000 };
+const vendidos = new Set();
+let comVendas = false;
 
 const SETORES = {
   vip:    { nome: 'VIP Premium', curto: 'VIP Premium', cor: '#2e8b14', preco: 'R$ 210', obs: 'a partir de · + taxas', sub: 'Pista em frente ao palco',
@@ -16,7 +24,7 @@ const SETORES = {
   back:   { nome: 'Backstage elevado', curto: 'Backstage', cor: '#1f6fe5', preco: 'R$ 500', obs: '+ taxas', sub: 'Plataformas dos dois lados do palco',
             txt: 'Plataformas elevadas coladas ao palco, uma de cada lado. A vista mais perto da dupla.', vista: 'back' },
   cam1:   { nome: 'Camarote 1º andar', curto: 'Camarote · 1º andar', cor: '#4b4bf0', preco: 'R$ 8.400', obs: 'por camarote · lote 1 · + taxas', sub: 'Camarotes 1 a 12',
-            txt: 'A fileira mais próxima da pista. Confira na Q2 quantas pessoas cada camarote leva.', vista: 'cam', andar: 1 },
+            txt: 'A fileira mais próxima da pista. Pergunte no WhatsApp quantas pessoas cada camarote leva.', vista: 'cam', andar: 1 },
   cam2:   { nome: 'Camarote 2º andar', curto: 'Camarote · 2º andar', cor: '#4b4bf0', preco: 'R$ 7.800', obs: 'por camarote · lote 1 · + taxas', sub: 'Camarotes 13 a 24',
             txt: 'Um andar acima, com a pista inteira e o palco no campo de visão.', vista: 'cam', andar: 2 },
   cam3:   { nome: 'Camarote 3º andar', curto: 'Camarote · 3º andar', cor: '#4b4bf0', preco: 'R$ 7.200', obs: 'por camarote · lote 1 · + taxas', sub: 'Camarotes 25 a 36',
@@ -25,10 +33,10 @@ const SETORES = {
             txt: 'Mesa alta para 6 pessoas no deck elevado, ao lado da pista.', vista: 'bis' },
   bis3:   { nome: 'Bistrô 3º andar', curto: 'Bistrô · 3º andar', cor: '#d24fea', preco: 'R$ 2.400', obs: 'mesa para 6 pessoas · lote 1 · + taxas', sub: 'Bistrôs 45 a 88',
             txt: 'Mesa alta para 6 pessoas no deck do meio, de frente para o palco.', vista: 'bis' },
-  bis4:   { nome: 'Bistrô 4º andar', curto: 'Bistrô · 4º andar', cor: '#d24fea', preco: 'Ver na Q2', obs: 'mesa para 6 pessoas', sub: 'Bistrôs 89 a 110',
+  bis4:   { nome: 'Bistrô 4º andar', curto: 'Bistrô · 4º andar', cor: '#d24fea', preco: 'Consulte', obs: 'mesa para 6 pessoas · valor no WhatsApp', sub: 'Bistrôs 89 a 110',
             txt: 'O deck mais alto dos bistrôs: a pista e o palco inteiros à vista.', vista: 'bis' },
   lounge: { nome: 'Lounge patrocinador', curto: 'Lounge', cor: '#2f6b3d', preco: 'Exclusivo', obs: 'para patrocinadores', sub: 'Lounges 1 a 6, na beira da passarela',
-            txt: 'Espaços dos patrocinadores, colados na passarela. Não estão à venda na Q2.', vista: 'lounge', semVenda: true },
+            txt: 'Espaços dos patrocinadores, colados na passarela. Não estão à venda.', vista: 'lounge', semVenda: true },
   palco:  { nome: 'Palco', curto: 'Palco', cor: '#2a2a30', preco: 'Zezé & Luciano', obs: 'a partir das 16h', sub: 'Com passarela até a pista',
             txt: 'Zezé Di Camargo & Luciano no palco, com o pôr do sol atrás da represa.', vista: 'palco', semVenda: true },
 };
@@ -412,6 +420,7 @@ const bancos = new THREE.InstancedMesh(gBanco, mat(0xd8b089), nBis * 4);
 const pesB = new THREE.InstancedMesh(gPeB, metal, nBis * 4);
 for (const im of [tampos, pes, bancos, pesB]) { im.castShadow = true; im.receiveShadow = true; cena.add(im); }
 const COR_TAMPO = new THREE.Color(0xf6f0e6), COR_SOL = new THREE.Color(0xffc21a), COR_HOVER = new THREE.Color(0xffe8a3);
+const COR_LIVRE = new THREE.Color(0xffd36b), COR_VENDIDO = new THREE.Color(0xa8a097);
 {
   const o = new THREE.Object3D(); let k = 0;
   for (const d of decks) {
@@ -767,9 +776,11 @@ const ficha = document.getElementById('ficha');
 function pinta() {
   for (const l of lugares) {
     const sel = l.id === selId, hov = l.id === hoverId, doSetor = setorAtivo && l.setor === setorAtivo;
-    if (l.inst != null) tampos.setColorAt(l.inst, sel ? COR_SOL : hov || doSetor ? COR_HOVER : COR_TAMPO);
-    else if (l.mesh) { l.mesh.material.emissive.set(sel ? 0xffc21a : hov ? 0x6a4a10 : doSetor ? 0x3a2a08 : 0); l.mesh.material.emissiveIntensity = sel ? 0.9 : 1; }
+    const livre = comVendas && !l.vendido && l.tipo !== 'lounge', vend = comVendas && l.vendido;
+    if (l.inst != null) tampos.setColorAt(l.inst, sel ? COR_SOL : hov || doSetor ? COR_HOVER : livre ? COR_LIVRE : vend ? COR_VENDIDO : COR_TAMPO);
+    else if (l.mesh) { l.mesh.material.emissive.set(sel ? 0xffc21a : hov ? 0x6a4a10 : doSetor ? 0x3a2a08 : livre ? 0x5a3a00 : 0); l.mesh.material.emissiveIntensity = sel ? 0.9 : 1; }
     l.tag.classList.toggle('sel', sel);
+    l.tag.classList.toggle('livre', livre); l.tag.classList.toggle('vendido', vend);
   }
   tampos.instanceColor.needsUpdate = true;
   for (const p of pilulas) p.el.classList.toggle('apagada', !!setorAtivo && p.st !== setorAtivo && !(p.st === 'cam1' && /^cam/.test(setorAtivo)) && !(p.st === 'bis2' && /^bis/.test(setorAtivo)));
@@ -787,6 +798,7 @@ function abreFicha(st, titulo, sub, extra = '') {
   document.getElementById('fTxt').textContent = S.txt + extra;
   const b = document.getElementById('fComprar');
   b.style.display = S.semVenda ? 'none' : '';
+  b.href = linkZap(titulo); b.textContent = 'Compre agora'; b.onclick = null;
   document.getElementById('fMiniNome').textContent = titulo;
   document.getElementById('fMiniPreco').textContent = S.preco;
   ficha.classList.remove('mini');
@@ -802,6 +814,13 @@ function seleciona(id, voar) {
   if (l.tipo === 'cam') abreFicha(l.setor, 'Camarote ' + l.num, `${l.andar}º andar · lado esquerdo do palco`);
   else if (l.tipo === 'bis') abreFicha(l.setor, 'Bistrô ' + l.num, S.sub.replace('Bistrôs', 'Fileira dos bistrôs') + ' · lado direito');
   else abreFicha('lounge', 'Lounge ' + l.num, 'Na beira da passarela');
+  if (comVendas && l.vendido) {
+    document.getElementById('fPreco').textContent = 'Vendido';
+    document.getElementById('fMiniPreco').textContent = 'Vendido';
+    const b = document.getElementById('fComprar');
+    b.textContent = 'Ver os livres deste setor'; b.href = '#';
+    b.onclick = e => { e.preventDefault(); escolheSetor(l.setor); };
+  }
   pinta();
   if (voar) voaParaLugar(l);
 }
@@ -854,7 +873,7 @@ function entraNoOlho() {
   document.body.classList.remove('olhoUI');
   document.body.classList.add('olhoSelo1'); clearTimeout(entraNoOlho.t); entraNoOlho.t = setTimeout(() => document.body.classList.remove('olhoSelo1'), 2600);
   const comprar = document.getElementById('olhoComprar');
-  comprar.href = Q2; comprar.style.display = SETORES[st].semVenda ? 'none' : '';
+  comprar.href = linkZap(nome); comprar.style.display = SETORES[st].semVenda ? 'none' : '';
   const olho = new THREE.Vector3(...o.pos), dir = new THREE.Vector3(...o.alvo).sub(olho).normalize();
   const alvo = olho.clone().addScaledVector(dir, 0.8);
   Object.assign(ctl, { enableZoom: false, enablePan: false, minDistance: 0.79 });
@@ -1032,6 +1051,36 @@ canvas.addEventListener('pointermove', e => {
 const dica = document.getElementById('dica');
 function esconderDica() { dica.style.opacity = 0; }
 setTimeout(esconderDica, 9000);
+
+// ---------------------------------------------------------------------------
+// disponibilidade (planilha da A6 → CSV público). ?demo=1 simula vendidos só para mostrar a ideia.
+// ---------------------------------------------------------------------------
+const idDoTexto = t => {
+  const s = String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(), n = parseInt((s.match(/\d+/) || [])[0], 10);
+  if (!n) return null;
+  return /^c|cam/.test(s) ? 'c' + n : /^b|bis/.test(s) ? 'b' + n : null;
+};
+async function carregaVendas() {
+  const demo = new URLSearchParams(location.search).has('demo');
+  const novos = new Set();
+  try {
+    if (demo) {
+      for (const l of lugares) if (l.tipo !== 'lounge' && ((l.num * 37 + (l.tipo === 'cam' ? 11 : 3)) % 10) < 4) novos.add(l.id);
+    } else if (VENDAS.csv) {
+      const txt = await (await fetch(VENDAS.csv + (VENDAS.csv.includes('?') ? '&' : '?') + 't=' + Date.now())).text();
+      for (const linha of txt.split(/\r?\n/).slice(1)) {
+        const [lugar, status] = linha.split(',').map(x => (x || '').replace(/^"|"$/g, ''));
+        const id = idDoTexto(lugar); if (id && /vend/i.test(status)) novos.add(id);
+      }
+    } else return;
+  } catch (e) { return; }                       // sem planilha: o mapa segue sem indicação
+  comVendas = true; vendidos.clear(); novos.forEach(v => vendidos.add(v));
+  for (const l of lugares) l.vendido = vendidos.has(l.id);
+  document.body.classList.add('comVendas');
+  pinta();
+}
+carregaVendas();
+if (VENDAS.csv) setInterval(carregaVendas, VENDAS.aCada);
 
 // ---------------------------------------------------------------------------
 // laço
