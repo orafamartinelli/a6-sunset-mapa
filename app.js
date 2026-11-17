@@ -609,13 +609,13 @@ function entraNoOlho() {
   comprar.href = Q2; comprar.style.display = SETORES[st].semVenda ? 'none' : '';
   const olho = new THREE.Vector3(...o.pos), dir = new THREE.Vector3(...o.alvo).sub(olho).normalize();
   const alvo = olho.clone().addScaledVector(dir, 0.8);
-  Object.assign(ctl, { enableZoom: false, enablePan: false });
+  Object.assign(ctl, { enableZoom: false, enablePan: false, minDistance: 0.79 });
   voa(o.pos, alvo.toArray(), 1800);
   voo.aoFim = () => { if (noOlho) { Object.assign(ctl, ORBITA_OLHO); comecaGiro(); } };
   ajusta();
 }
 // roteiro do giro: [ângulo em graus (positivo = esquerda), duração em ms até chegar nele]
-const GIRO = [[0, 0], [0, 500], [85, 2400], [85, 450], [-85, 3800], [-85, 450], [0, 2300]];
+const GIRO = [[0, 0], [0, 300], [45, 1100], [45, 250], [-45, 1700], [-45, 250], [0, 1100]];
 let giro = null;
 function comecaGiro() {
   if (!noOlho) return;
