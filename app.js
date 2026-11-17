@@ -611,11 +611,37 @@ function entraNoOlho() {
   const alvo = olho.clone().addScaledVector(dir, 0.8);
   Object.assign(ctl, { enableZoom: false, enablePan: false });
   voa(o.pos, alvo.toArray(), 1800);
-  voo.aoFim = () => { if (noOlho) Object.assign(ctl, ORBITA_OLHO); };
+  voo.aoFim = () => { if (noOlho) { Object.assign(ctl, ORBITA_OLHO); comecaGiro(); } };
   ajusta();
+}
+// roteiro do giro: [ângulo em graus (positivo = esquerda), duração em ms até chegar nele]
+const GIRO = [[0, 0], [0, 500], [85, 2400], [85, 450], [-85, 3800], [-85, 450], [0, 2300]];
+let giro = null;
+function comecaGiro() {
+  if (!noOlho) return;
+  const dir = ctl.target.clone().sub(cam.position); dir.y = 0;
+  const alt = ctl.target.y - cam.position.y;
+  giro = { olho: cam.position.clone(), dir: dir.normalize(), alt, t0: performance.now() };
+}
+function paraGiro() { giro = null; }
+const EIXO_Y = new THREE.Vector3(0, 1, 0), vGiro = new THREE.Vector3();
+function passoGiro() {
+  if (!giro) return;
+  let t = performance.now() - giro.t0, ang = 0, fim = true;
+  for (let i = 1; i < GIRO.length; i++) {
+    const [a0] = GIRO[i - 1], [a1, ms] = GIRO[i];
+    if (t <= ms) { const k = ms ? t / ms : 1; ang = a0 + (a1 - a0) * ease(k); fim = false; break; }
+    t -= ms; ang = a1;
+  }
+  vGiro.copy(giro.dir).applyAxisAngle(EIXO_Y, THREE.MathUtils.degToRad(ang)).multiplyScalar(0.8);
+  vGiro.y = giro.alt;
+  cam.position.copy(giro.olho);
+  ctl.target.copy(giro.olho).add(vGiro);
+  if (fim) giro = null;
 }
 function saiDoOlho() {
   if (!noOlho) return;
+  paraGiro();
   noOlho = false;
   document.body.classList.remove('olho', 'olhoUI', 'olhoSelo1');
   Object.assign(ctl, ORBITA_MAPA);
@@ -624,6 +650,16 @@ function saiDoOlho() {
 function voltaDoOlho() { saiDoOlho(); if (selId) voaParaLugar(porId.get(selId)); else if (setorAtivo) vista(SETORES[setorAtivo].vista); else vista('geral'); }
 btVista.onclick = () => entraNoOlho();
 document.getElementById('olhoVoltar').onclick = voltaDoOlho;
+document.getElementById('olhoGirar').onclick = () => {
+  if (!noOlho) return;
+  if (giro) return;
+  // volta o olhar ao palco antes de girar, para o giro sempre começar centrado
+  const o = selId ? olhoDoLugar(porId.get(selId)) : (OLHO_SETOR[setorAtivo].lugar ? olhoDoLugar(porId.get(OLHO_SETOR[setorAtivo].lugar)) : OLHO_SETOR[setorAtivo]);
+  const olho = new THREE.Vector3(...o.pos), dir = new THREE.Vector3(...o.alvo).sub(olho).normalize();
+  cam.position.copy(olho); ctl.target.copy(olho).addScaledVector(dir, 0.8);
+  comecaGiro();
+  document.body.classList.remove('olhoUI');
+};
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && noOlho) voltaDoOlho(); });
 document.getElementById('fFechar').onclick = () => { fechaFicha(); vista('geral'); };
 
@@ -728,7 +764,7 @@ document.getElementById('olhoBarra').addEventListener('pointerdown', () => mostr
 canvas.addEventListener('pointerdown', e => {
   baixo = [e.clientX, e.clientY];
   if (voo?.aoFim) { cam.position.copy(voo.p1); ctl.target.copy(voo.a1); voo.aoFim(); }
-  voo = null; esconderDica(); recolheFicha();
+  voo = null; paraGiro(); esconderDica(); recolheFicha();
 });
 canvas.addEventListener('pointerup', e => {
   if (noOlho) return;
@@ -775,6 +811,7 @@ function quadro() {
     cam.position.lerpVectors(voo.p0, voo.p1, e); ctl.target.lerpVectors(voo.a0, voo.a1, e);
     if (k >= 1) { const fim = voo.aoFim; voo = null; fim?.(); }
   }
+  passoGiro();
   ctl.update();
   // sombra acompanha o evento
   sol.target.position.set(0, 0, -2);

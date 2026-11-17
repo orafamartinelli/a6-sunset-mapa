@@ -142,7 +142,7 @@ body.olho.olhoUI .ctrl{opacity:1;pointer-events:auto}
 body.olho.olhoUI .ctrl .zoom{display:none}
 .olhoSelo{font:800 12px var(--f-tit);letter-spacing:.22em;text-transform:uppercase;color:var(--creme);text-shadow:0 2px 10px rgba(0,0,0,.7);text-align:center}
 .olhoSelo b{display:block;font-size:clamp(22px,4vw,34px);letter-spacing:-.01em;text-transform:none;color:#fff;margin-top:4px}
-.olhoAcoes{display:flex;gap:8px}
+.olhoAcoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .olhoEntrada{position:absolute;left:50%;top:14%;transform:translateX(-50%);z-index:6;text-align:center;font:800 11px var(--f-tit);letter-spacing:.24em;text-transform:uppercase;color:var(--creme);text-shadow:0 2px 12px rgba(0,0,0,.8);opacity:0;pointer-events:none;transition:opacity .6s}
 .olhoEntrada b{display:block;font-size:clamp(20px,4vw,30px);letter-spacing:-.01em;text-transform:none;color:#fff;margin-top:4px}
 body.olho.olhoSelo1 .olhoEntrada{opacity:1}
@@ -268,6 +268,7 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
       <div class="olhoSelo">Sua vista<b id="olhoNome">Camarote 14</b></div>
       <div class="olhoAcoes">
         <button class="btn vidro" id="olhoVoltar">↩ Voltar ao mapa</button>
+        <button class="btn vidro" id="olhoGirar" aria-label="Olhar em volta de novo">↔ Olhar em volta</button>
         <a class="btn sol" id="olhoComprar" data-rastreio-cta="comprar-vista" href="#" target="_blank" rel="noopener">Comprar</a>
       </div>
       <div class="olhoDica">Arraste para olhar em volta</div>
@@ -335,6 +336,6 @@ body.olho.olhoSelo1 .olhoEntrada{opacity:1}
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
 } }
 </script>
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=7"></script>
 </body>
 </html>
