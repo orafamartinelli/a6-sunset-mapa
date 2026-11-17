@@ -231,9 +231,9 @@ function desenhaTelao(t, noite) {
     led.lineTo(w, h); led.fill();
   }
   led.fillStyle = '#fff1d6'; led.textAlign = 'center';
-  led.font = '84px "Bagel Fat One", "Arial Black", sans-serif';
+  led.font = '800 70px "Unbounded", "Arial Black", sans-serif';
   led.fillText('ZEZÉ DI CAMARGO', w / 2, 120);
-  led.font = '58px "Bagel Fat One", "Arial Black", sans-serif';
+  led.font = '800 48px "Unbounded", "Arial Black", sans-serif';
   led.fillText('& LUCIANO', w / 2, 188);
   ledTex.needsUpdate = true;
 }
@@ -540,8 +540,14 @@ function abreFicha(st, titulo, sub, extra = '') {
   document.getElementById('fTxt').textContent = S.txt + extra;
   const b = document.getElementById('fComprar');
   b.style.display = S.semVenda ? 'none' : '';
+  document.getElementById('fMiniNome').textContent = titulo;
+  document.getElementById('fMiniPreco').textContent = S.preco;
+  ficha.classList.remove('mini');
   ficha.classList.add('on');
 }
+// ficha recolhe numa pílula quando a pessoa mexe no mapa; um toque reabre
+function recolheFicha() { if (ficha.classList.contains('on') && !noOlho) ficha.classList.add('mini'); }
+ficha.addEventListener('click', e => { if (ficha.classList.contains('mini')) { e.preventDefault(); e.stopPropagation(); ficha.classList.remove('mini'); } }, true);
 function seleciona(id, voar) {
   const l = porId.get(id); if (!l) return;
   saiDoOlho(); selId = id; setorAtivo = null; gravaHash(id);
@@ -583,19 +589,39 @@ function olhoDoLugar(l) {
   if (l.tipo === 'bis') return { pos: [t.x + 0.62, t.y + 0.15, t.z], alvo: PALCO_OLHAR };
   return { pos: [t.x, t.y + 0.3, t.z + 1.2], alvo: PALCO_OLHAR };
 }
+// No modo vista a câmera fica parada no lugar e o arrasto só gira o olhar
+// (o alvo da órbita fica 0,8 m à frente dos olhos).
+const ORBITA_MAPA = { minDistance: 6, maxDistance: 260, minPolarAngle: 0, maxPolarAngle: Math.PI * 0.47, enableZoom: true, enablePan: true, rotateSpeed: 1 };
+const ORBITA_OLHO = { minDistance: 0.79, maxDistance: 0.81, minPolarAngle: Math.PI * 0.3, maxPolarAngle: Math.PI * 0.66, enableZoom: false, enablePan: false, rotateSpeed: -0.45 };
 function entraNoOlho() {
-  let o;
-  if (selId) o = olhoDoLugar(porId.get(selId));
-  else if (setorAtivo) { const s = OLHO_SETOR[setorAtivo]; o = s.lugar ? olhoDoLugar(porId.get(s.lugar)) : s; }
+  let o, nome;
+  if (selId) { o = olhoDoLugar(porId.get(selId)); nome = document.getElementById('fNome').textContent; }
+  else if (setorAtivo) { const s = OLHO_SETOR[setorAtivo]; o = s.lugar ? olhoDoLugar(porId.get(s.lugar)) : s; nome = SETORES[setorAtivo].nome; }
   if (!o) return;
-  noOlho = true; ctl.minDistance = 0.5; btVista.setAttribute('aria-pressed', 'true'); btVista.textContent = '↩ Voltar ao mapa';
-  voa(o.pos, o.alvo, 1600); camada.style.opacity = 0.35;
+  const st = selId ? porId.get(selId).setor : setorAtivo;
+  noOlho = true;
+  document.body.classList.add('olho');
+  document.getElementById('olhoNome').textContent = nome;
+  const comprar = document.getElementById('olhoComprar');
+  comprar.href = Q2; comprar.style.display = SETORES[st].semVenda ? 'none' : '';
+  const olho = new THREE.Vector3(...o.pos), dir = new THREE.Vector3(...o.alvo).sub(olho).normalize();
+  const alvo = olho.clone().addScaledVector(dir, 0.8);
+  Object.assign(ctl, { enableZoom: false, enablePan: false });
+  voa(o.pos, alvo.toArray(), 1800);
+  voo.aoFim = () => { if (noOlho) Object.assign(ctl, ORBITA_OLHO); };
+  ajusta();
 }
-function saiDoOlho() { if (!noOlho) return; noOlho = false; ctl.minDistance = 6; btVista.setAttribute('aria-pressed', 'false'); btVista.textContent = '👁 Ver a vista daqui'; camada.style.opacity = 1; }
-btVista.onclick = () => {
-  if (noOlho) { saiDoOlho(); if (selId) voaParaLugar(porId.get(selId)); else if (setorAtivo) vista(SETORES[setorAtivo].vista); }
-  else entraNoOlho();
-};
+function saiDoOlho() {
+  if (!noOlho) return;
+  noOlho = false;
+  document.body.classList.remove('olho');
+  Object.assign(ctl, ORBITA_MAPA);
+  ajusta();
+}
+function voltaDoOlho() { saiDoOlho(); if (selId) voaParaLugar(porId.get(selId)); else if (setorAtivo) vista(SETORES[setorAtivo].vista); else vista('geral'); }
+btVista.onclick = () => entraNoOlho();
+document.getElementById('olhoVoltar').onclick = voltaDoOlho;
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && noOlho) voltaDoOlho(); });
 document.getElementById('fFechar').onclick = () => { fechaFicha(); vista('geral'); };
 
 // hash: #c12, #b45, #l3, #vip, #back, #cam1…
@@ -687,8 +713,13 @@ function acerta(e) {
   return null;
 }
 let baixo = null;
-canvas.addEventListener('pointerdown', e => { baixo = [e.clientX, e.clientY]; voo = null; animHora = animHora; esconderDica(); });
+canvas.addEventListener('pointerdown', e => {
+  baixo = [e.clientX, e.clientY];
+  if (voo?.aoFim) { cam.position.copy(voo.p1); ctl.target.copy(voo.a1); voo.aoFim(); }
+  voo = null; esconderDica(); recolheFicha();
+});
 canvas.addEventListener('pointerup', e => {
+  if (noOlho) return;
   if (!baixo || Math.hypot(e.clientX - baixo[0], e.clientY - baixo[1]) > 6) return;
   const a = acerta(e);
   if (a?.lugar) seleciona(a.lugar.id, true);
@@ -710,7 +741,7 @@ setTimeout(esconderDica, 9000);
 function ajusta() {
   const w = tela.clientWidth, h = tela.clientHeight;
   renderer.setSize(w, h, false); cam.aspect = w / h;
-  cam.fov = w < 700 ? 52 : 40; cam.updateProjectionMatrix();
+  cam.fov = noOlho ? (w < 700 ? 74 : 58) : (w < 700 ? 52 : 40); cam.updateProjectionMatrix();
 }
 new ResizeObserver(ajusta).observe(tela); ajusta();
 
@@ -730,7 +761,7 @@ function quadro() {
   if (voo) {
     const k = Math.min(1, (performance.now() - voo.t0) / voo.ms), e = ease(k);
     cam.position.lerpVectors(voo.p0, voo.p1, e); ctl.target.lerpVectors(voo.a0, voo.a1, e);
-    if (k >= 1) voo = null;
+    if (k >= 1) { const fim = voo.aoFim; voo = null; fim?.(); }
   }
   ctl.update();
   // sombra acompanha o evento
