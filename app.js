@@ -298,9 +298,9 @@ function desenhaTelao(t, noite) {
     led.lineTo(w, h); led.fill();
   }
   led.fillStyle = '#fff1d6'; led.textAlign = 'center';
-  led.font = '800 70px "Unbounded", "Arial Black", sans-serif';
+  led.font = '900 74px "Montserrat", "Arial Black", sans-serif';
   led.fillText('ZEZÉ DI CAMARGO', w / 2, 120);
-  led.font = '800 48px "Unbounded", "Arial Black", sans-serif';
+  led.font = '900 50px "Montserrat", "Arial Black", sans-serif';
   led.fillText('& LUCIANO', w / 2, 188);
   ledTex.needsUpdate = true;
 }
@@ -614,7 +614,7 @@ for (let z = -680; z < 680; z += 14) caixa(0.3, 0.07, 6, 0xe8c64a, 110, 0.07, z,
   for (const [xe, s] of [[PISTA.x0, 1], [PISTA.x1, -1]]) for (const k of [-3, -2, -1, 1, 2, 3]) caixa(14, 0.09, 1.1, 0xf2f2f2, xe + s * 11, 0.18, Z + k * 2.3, { sombra: false });
   const numero = (txt, x, rot) => {
     const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
-    g.fillStyle = '#f2f2f2'; g.font = '800 190px "Unbounded", "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 128, 136);
+    g.fillStyle = '#f2f2f2'; g.font = '800 190px "Montserrat", "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 128, 136);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(13, 13).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }));
     m.position.set(x, 0.2, Z); m.rotation.y = rot; cena.add(m);
@@ -817,7 +817,7 @@ function seleciona(id, voar) {
   saiDoOlho(); selId = id; setorAtivo = null; gravaHash(id);
   const S = SETORES[l.setor];
   if (l.tipo === 'cam') abreFicha(l.setor, 'Camarote ' + l.num, `${l.andar}º andar · lado esquerdo do palco`);
-  else if (l.tipo === 'bis') abreFicha(l.setor, 'Bistrô ' + l.num, S.sub.replace('Bistrôs', 'Fileira dos bistrôs') + ' · lado direito');
+  else if (l.tipo === 'bis') abreFicha(l.setor, 'Bistrô ' + l.num, S.nome.replace('Bistrô ', '') + ' · mesa para 6 · lado direito');
   else abreFicha('lounge', 'Lounge ' + l.num, 'Na beira da passarela');
   if (l.pessoas && l.tipo !== 'bis') document.getElementById('fSub').textContent += ' · até ' + l.pessoas + ' pessoas';
   if (comVendas && l.vendido) {
