@@ -187,6 +187,8 @@ const agua = new THREE.Mesh(
           sin(p.x*0.32 + t*1.1)*0.045 + sin(p.y*0.55 - t*1.3)*0.03 + sin((p.x+p.y)*1.6 + t*2.2)*0.018,
           1.0,
           cos(p.y*0.38 + t*0.9)*0.045 + cos(p.x*0.66 - t*1.4)*0.03 + sin((p.x-p.y)*1.8 - t*1.9)*0.018));
+        float dd = length(vW - cameraPosition);
+        n = normalize(mix(vec3(0.0, 1.0, 0.0), n, clamp(1.0 - (dd - 60.0) / 200.0, 0.12, 1.0)));   // ondas somem de longe (sem xadrez)
         vec3 v = normalize(vW - cameraPosition);
         vec3 r = reflect(v, n);
         float fres = 0.05 + 0.95 * pow(1.0 - max(dot(-v, n), 0.0), 4.0);
