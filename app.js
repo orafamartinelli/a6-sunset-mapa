@@ -286,6 +286,78 @@ const cantores = new THREE.Group(); cena.add(cantores);
   fazCantor(-1.3, 0x1c1c22, 0x2a1c14);
   fazCantor(1.3, 0xe8e2d8, null);
 }
+// v14 — bonecos da dupla em "recorte de palco" (foto recortada que sempre vira para a câmera).
+// Só aparecem com ?bonecos=1 enquanto o Rafa não aprova; sem a chave ficam os provisórios acima.
+const BONECOS = new URLSearchParams(location.search).has('bonecos');
+const bonecos = [];
+if (BONECOS) {
+  cantores.visible = false;
+  const loader = new THREE.TextureLoader();
+  // sombra de contato no piso (mancha macia)
+  const somTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+    const r = g.createRadialGradient(32, 32, 2, 32, 32, 31);
+    r.addColorStop(0, 'rgba(0,0,0,.55)'); r.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c);
+  })();
+  // contorno de luz de palco: silhueta da foto, borrada, atrás do recorte
+  const silhueta = (img, cor) => {
+    const c = document.createElement('canvas'); c.width = 96; c.height = Math.round(96 * img.height / img.width);
+    const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
+    g.globalCompositeOperation = 'source-in'; g.fillStyle = cor; g.fillRect(0, 0, c.width, c.height);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  const pernaGeo = new THREE.CylinderGeometry(0.075, 0.065, 0.86, 10).translate(0, 0.43, 0);
+  const sapatoGeo = new THREE.BoxGeometry(0.12, 0.08, 0.27).translate(0, 0.04, 0.05);
+  const fazBoneco = ({ x, arquivo, alt, calca, sapato, fase }) => {
+    const g = new THREE.Group(); g.position.set(x, PISO_PALCO, -25.2); cena.add(g);
+    const som = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.7), new THREE.MeshBasicMaterial({ map: somTex, transparent: true, depthWrite: false }));
+    som.rotation.x = -Math.PI / 2; som.position.y = 0.012; g.add(som);
+    const giro = new THREE.Group(); giro.rotation.order = 'YXZ'; g.add(giro); // vira para a câmera (eixo Y)
+    const corpo = new THREE.Group(); giro.add(corpo);     // balanço do show (pivô nos pés)
+    const mCalca = mat(calca, { roughness: 0.85 }), mSap = mat(sapato, { roughness: 0.4, metalness: 0.2 });
+    for (const s of [-1, 1]) {
+      const p = new THREE.Mesh(pernaGeo, mCalca); p.position.x = s * 0.1; p.castShadow = true; corpo.add(p);
+      const sp = new THREE.Mesh(sapatoGeo, mSap); sp.position.x = s * 0.1; sp.castShadow = true; corpo.add(sp);
+    }
+    const quadril = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.18, 0.2, 14), mCalca);
+    quadril.scale.z = 0.62; quadril.position.y = 0.86; quadril.castShadow = true; corpo.add(quadril);
+    const b = { g, giro, corpo, fase, x };
+    loader.load(arquivo, tex => {
+      tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+      const img = tex.image, h = alt, w = h * img.width / img.height, base = 0.8;
+      const halo = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.07, h * 1.04),
+        new THREE.MeshBasicMaterial({ map: silhueta(img, '#ffc27a'), transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
+      halo.position.set(0, base + h / 2, -0.03); corpo.add(halo);
+      const foto = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.45, side: THREE.DoubleSide, toneMapped: false }));
+      foto.position.set(0, base + h / 2, 0); foto.castShadow = true; corpo.add(foto);
+      Object.assign(b, { foto, halo });
+    });
+    bonecos.push(b);
+  };
+  // siga a foto oficial: Zezé = colete preto sobre camisa branca; Luciano = paletó azul-marinho, camisa branca, barba
+  fazBoneco({ x: -1.3, arquivo: 'bonecos/zeze.webp', alt: 0.98, calca: 0x16161b, sapato: 0x0d0d10, fase: 0 });
+  fazBoneco({ x: 1.3, arquivo: 'bonecos/luciano.webp', alt: 0.98, calca: 0x1b2540, sapato: 0x0d0d10, fase: 1.9 });
+  // 2 retornos (monitores de chão) na frente da dupla
+  for (const x of [-1.3, 1.3]) {
+    const r = caixa(0.62, 0.34, 0.42, 0x141418, x, PISO_PALCO + 0.17, -24.25);
+    r.rotation.x = -0.35;
+  }
+}
+const _vb = new THREE.Vector3();
+function animaBonecos(t) {
+  for (const b of bonecos) {
+    b.g.getWorldPosition(_vb);
+    const dx = cam.position.x - _vb.x, dz = cam.position.z - _vb.z, dy = cam.position.y - (_vb.y + 1.2);
+    b.giro.rotation.y = Math.atan2(dx, dz);
+    // de cima (voo da abertura) inclina um pouco para trás, para não virar um risco
+    b.giro.rotation.x = -THREE.MathUtils.clamp(Math.atan2(dy, Math.hypot(dx, dz)) * 0.35, 0, 0.32);
+    b.corpo.rotation.z = Math.sin(t * 1.7 + b.fase) * 0.035;
+    b.corpo.position.y = Math.abs(Math.sin(t * 2.1 + b.fase)) * 0.025;
+    if (b.halo) b.halo.material.opacity = 0.1 + NOITE * 0.5;
+  }
+}
 function desenhaTelao(t, noite) {
   const w = ledCanvas.width, h = ledCanvas.height;
   const g = led.createLinearGradient(0, 0, 0, h);
@@ -1159,6 +1231,7 @@ function quadro() {
   passoCobertura();
   if (quadroN % 2 === 0) animaGente(t);
   cantores.children.forEach((c, i) => { c.position.y = PISO_PALCO + Math.abs(Math.sin(t * 2.1 + i * 1.7)) * 0.03; });
+  if (bonecos.length) animaBonecos(t);
   renderer.render(cena, cam);
   if (!introFeita && quadroN === 3) {
     introFeita = true;
