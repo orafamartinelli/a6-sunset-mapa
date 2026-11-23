@@ -1,6 +1,6 @@
 {
  "fonte": "Q2 Ingressos (seats.io)",
- "atualizado": "2026-11-22T18:11:22.672Z",
+ "atualizado": "2026-11-23T22:23:04.568Z",
  "lugares": {
   "c19": {
    "s": "reservado",
@@ -95,7 +95,7 @@
    "p": 12
   },
   "c11": {
-   "s": "vendido",
+   "s": "livre",
    "p": 12
   },
   "c12": {
